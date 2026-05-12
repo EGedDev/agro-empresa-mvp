@@ -48,14 +48,25 @@ Desde la raiz del proyecto:
 docker compose -f infra/docker-compose.yml up -d
 ```
 
-La base de datos queda disponible en:
+La base de datos local de desarrollo queda disponible con los valores definidos
+en `infra/docker-compose.yml`.
 
-```text
-localhost:5433
-database: agro_db
-user: agro_user
-password: agro_password_dev
+## Configuracion
+
+El backend lee la configuracion desde variables de entorno. Puedes usar
+`.env.example` como referencia para tu entorno local:
+
+```properties
+SERVER_PORT=8080
+DB_URL=jdbc:postgresql://localhost:5433/agro_db
+DB_USERNAME=agro_user
+DB_PASSWORD=change_me_for_local_dev
+JPA_DDL_AUTO=update
+JPA_SHOW_SQL=true
 ```
+
+No subas archivos `.env` con credenciales reales. Los valores del ejemplo son
+solo para desarrollo local.
 
 ## Ejecutar Backend
 
