@@ -2,6 +2,7 @@ package com.agroempresa.erp.cliente;
 
 import com.agroempresa.erp.cliente.dto.ClienteRequest;
 import com.agroempresa.erp.cliente.dto.ClienteResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,14 +35,14 @@ public class ClienteController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ClienteResponse crear(@RequestBody ClienteRequest request) {
+    public ClienteResponse crear(@Valid @RequestBody ClienteRequest request) {
         return clienteService.crear(request);
     }
 
     @PutMapping("/{id}")
     public ClienteResponse actualizar(
             @PathVariable Long id,
-            @RequestBody ClienteRequest request
+            @Valid @RequestBody ClienteRequest request
     ) {
         return clienteService.actualizar(id, request);
     }

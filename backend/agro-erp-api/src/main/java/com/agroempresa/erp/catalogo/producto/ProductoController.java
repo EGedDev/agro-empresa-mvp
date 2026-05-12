@@ -2,6 +2,7 @@ package com.agroempresa.erp.catalogo.producto;
 
 import com.agroempresa.erp.catalogo.producto.dto.ProductoRequest;
 import com.agroempresa.erp.catalogo.producto.dto.ProductoResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,14 +40,14 @@ public class ProductoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductoResponse crear(@RequestBody ProductoRequest request) {
+    public ProductoResponse crear(@Valid @RequestBody ProductoRequest request) {
         return productoService.crear(request);
     }
 
     @PutMapping("/{id}")
     public ProductoResponse actualizar(
             @PathVariable Long id,
-            @RequestBody ProductoRequest request
+            @Valid @RequestBody ProductoRequest request
     ) {
         return productoService.actualizar(id, request);
     }

@@ -2,6 +2,7 @@ package com.agroempresa.erp.comercial.venta;
 
 import com.agroempresa.erp.comercial.venta.dto.VentaRequest;
 import com.agroempresa.erp.comercial.venta.dto.VentaResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +30,7 @@ public class VentaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VentaResponse crear(@RequestBody VentaRequest request) {
+    public VentaResponse crear(@Valid @RequestBody VentaRequest request) {
         return ventaService.crear(request);
     }
 
