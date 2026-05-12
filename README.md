@@ -1,7 +1,7 @@
 # Agro Empresa MVP
 
-Sistema web en desarrollo para digitalizar la gestion logistica y comercial de
-una tienda de productos agricolas. El objetivo es construir una plataforma que
+Sistema web en desarrollo para digitalizar la gestion logistica y comercial de Itaven SAC
+una MYPE del sector agricola. El objetivo es construir una plataforma que
 permita administrar catalogo, clientes, ventas e inventario, reduciendo procesos
 manuales y dejando una base preparada para un futuro frontend comercial en React.
 
