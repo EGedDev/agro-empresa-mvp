@@ -2,6 +2,7 @@ package com.agroempresa.erp.cliente;
 
 import com.agroempresa.erp.cliente.dto.ClienteRequest;
 import com.agroempresa.erp.cliente.dto.ClienteResponse;
+import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,7 +89,7 @@ public class ClienteService {
         Cliente cliente = buscarClientePorId(id);
 
         if (!cliente.getActivo()) {
-            throw new IllegalArgumentException("El cliente ya se encuentra desactivado");
+            throw new BusinessException("El cliente ya se encuentra desactivado");
         }
 
         cliente.desactivar();
@@ -103,11 +104,11 @@ public class ClienteService {
 
     private void validarRequest(ClienteRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("Los datos del cliente son obligatorios");
+            throw new BusinessException("Los datos del cliente son obligatorios");
         }
 
         if (request.nombre() == null || request.nombre().isBlank()) {
-            throw new IllegalArgumentException("El nombre del cliente es obligatorio");
+            throw new BusinessException("El nombre del cliente es obligatorio");
         }
     }
 
@@ -119,7 +120,7 @@ public class ClienteService {
         clienteRepository.findByDocumentoIdentidadIgnoreCase(documentoIdentidad)
                 .filter(cliente -> !cliente.getId().equals(idActual))
                 .ifPresent(cliente -> {
-                    throw new IllegalArgumentException("Ya existe un cliente con el documento: " + documentoIdentidad);
+                    throw new BusinessException("Ya existe un cliente con el documento: " + documentoIdentidad);
                 });
     }
 

@@ -2,6 +2,7 @@ package com.agroempresa.erp.catalogo.categoria;
 
 import com.agroempresa.erp.catalogo.categoria.dto.CategoriaRequest;
 import com.agroempresa.erp.catalogo.categoria.dto.CategoriaResponse;
+import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +37,7 @@ public class CategoriaService {
         String nombreNormalizado = request.nombre().trim();
 
         if (categoriaRepository.existsByNombreIgnoreCase(nombreNormalizado)) {
-            throw new IllegalArgumentException("Ya existe una categoría con ese nombre");
+            throw new BusinessException("Ya existe una categoría con ese nombre");
         }
 
         Categoria categoria = new Categoria(
@@ -56,7 +57,7 @@ public class CategoriaService {
         String nombreNormalizado = request.nombre().trim();
 
         if (categoriaRepository.existsByNombreIgnoreCaseAndIdNot(nombreNormalizado, id)) {
-            throw new IllegalArgumentException("Ya existe otra categoría con ese nombre");
+            throw new BusinessException("Ya existe otra categoría con ese nombre");
         }
 
         categoria.actualizar(
@@ -72,7 +73,7 @@ public class CategoriaService {
         Categoria categoria = buscarCategoriaPorId(id);
 
         if (!categoria.getActivo()) {
-            throw new IllegalArgumentException("La categoría ya se encuentra desactivada");
+            throw new BusinessException("La categoría ya se encuentra desactivada");
         }
 
         categoria.desactivar();

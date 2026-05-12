@@ -82,16 +82,26 @@ public class Producto {
         this.activo = false;
     }
 
-public void descontarStock(Integer cantidad) {
-    this.stockActual = this.stockActual - cantidad;
-}
+    public void descontarStock(Integer cantidad) {
+        validarCantidadMovimiento(cantidad);
 
-public void aumentarStock(Integer cantidad) {
-    this.stockActual = this.stockActual + cantidad;
-}
+        if (this.stockActual < cantidad) {
+            throw new IllegalArgumentException("Stock insuficiente para descontar inventario");
+        }
 
+        this.stockActual = this.stockActual - cantidad;
+    }
 
+    public void aumentarStock(Integer cantidad) {
+        validarCantidadMovimiento(cantidad);
+        this.stockActual = this.stockActual + cantidad;
+    }
 
+    private void validarCantidadMovimiento(Integer cantidad) {
+        if (cantidad == null || cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad debe ser mayor a cero");
+        }
+    }
 
 
     @PrePersist

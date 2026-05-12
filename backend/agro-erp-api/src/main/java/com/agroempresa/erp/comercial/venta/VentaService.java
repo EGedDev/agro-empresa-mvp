@@ -128,7 +128,17 @@ public class VentaService {
 
         for (VentaDetalle detalle : venta.getDetalles()) {
             Producto producto = detalle.getProducto();
+            Integer stockAnterior = producto.getStockActual();
+
             producto.aumentarStock(detalle.getCantidad());
+
+            inventarioService.registrarEntradaPorCancelacionVenta(
+                    producto,
+                    detalle.getCantidad(),
+                    stockAnterior,
+                    producto.getStockActual(),
+                    venta.getId()
+            );
         }
 
         venta.cancelar();

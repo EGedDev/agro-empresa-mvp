@@ -1,11 +1,13 @@
 package com.agroempresa.erp.common.error;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -21,12 +23,29 @@ public class ApiExceptionHandler {
         );
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse manejarIllegalArgument(IllegalArgumentException ex) {
+    public ErrorResponse manejarReglaDeNegocio(BusinessException ex) {
         return new ErrorResponse(
-                "BAD_REQUEST",
+                "BUSINESS_RULE_VIOLATION",
                 ex.getMessage(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ValidationErrorResponse manejarConstraintViolations(ConstraintViolationException ex) {
+        Map<String, String> errores = new LinkedHashMap<>();
+
+        ex.getConstraintViolations().forEach(error ->
+                errores.put(error.getPropertyPath().toString(), error.getMessage())
+        );
+
+        return new ValidationErrorResponse(
+                "VALIDATION_ERROR",
+                "La solicitud contiene datos inválidos",
+                errores,
                 Instant.now()
         );
     }
@@ -34,7 +53,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ValidationErrorResponse manejarValidaciones(MethodArgumentNotValidException ex) {
-        Map<String, String> errores = new HashMap<>();
+        Map<String, String> errores = new LinkedHashMap<>();
 
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errores.put(error.getField(), error.getDefaultMessage())
@@ -44,6 +63,26 @@ public class ApiExceptionHandler {
                 "VALIDATION_ERROR",
                 "La solicitud contiene datos inválidos",
                 errores,
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse manejarCuerpoInvalido(HttpMessageNotReadableException ex) {
+        return new ErrorResponse(
+                "MALFORMED_REQUEST",
+                "El cuerpo de la solicitud no tiene un formato válido",
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse manejarIllegalArgument(IllegalArgumentException ex) {
+        return new ErrorResponse(
+                "BAD_REQUEST",
+                ex.getMessage(),
                 Instant.now()
         );
     }

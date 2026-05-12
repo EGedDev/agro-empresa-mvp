@@ -12,14 +12,14 @@ public record ClienteRequest(
         @Size(max = 20, message = "El documento de identidad no debe superar los 20 caracteres")
         String documentoIdentidad,
 
-        @Size(max = 30, message = "El telefono no debe superar los 30 caracteres")
+        @Size(max = 30, message = "El teléfono no debe superar los 30 caracteres")
         String telefono,
 
-        @Email(message = "El email debe tener un formato valido")
+        @Email(message = "El email debe tener un formato válido")
         @Size(max = 160, message = "El email no debe superar los 160 caracteres")
         String email,
 
-        @Size(max = 250, message = "La direccion no debe superar los 250 caracteres")
+        @Size(max = 250, message = "La dirección no debe superar los 250 caracteres")
         String direccion
 ) {
 }

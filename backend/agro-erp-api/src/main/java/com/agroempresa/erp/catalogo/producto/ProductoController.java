@@ -3,13 +3,16 @@ package com.agroempresa.erp.catalogo.producto;
 import com.agroempresa.erp.catalogo.producto.dto.ProductoRequest;
 import com.agroempresa.erp.catalogo.producto.dto.ProductoResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/productos")
+@Validated
 public class ProductoController {
 
     private final ProductoService productoService;
@@ -34,7 +37,7 @@ public class ProductoController {
     }
 
     @GetMapping("/{id}")
-    public ProductoResponse obtenerPorId(@PathVariable Long id) {
+    public ProductoResponse obtenerPorId(@PathVariable @Positive(message = "El id debe ser mayor a cero") Long id) {
         return productoService.obtenerPorId(id);
     }
 
@@ -46,14 +49,14 @@ public class ProductoController {
 
     @PutMapping("/{id}")
     public ProductoResponse actualizar(
-            @PathVariable Long id,
+            @PathVariable @Positive(message = "El id debe ser mayor a cero") Long id,
             @Valid @RequestBody ProductoRequest request
     ) {
         return productoService.actualizar(id, request);
     }
 
     @PatchMapping("/{id}/desactivar")
-    public ProductoResponse desactivar(@PathVariable Long id) {
+    public ProductoResponse desactivar(@PathVariable @Positive(message = "El id debe ser mayor a cero") Long id) {
         return productoService.desactivar(id);
     }
 }

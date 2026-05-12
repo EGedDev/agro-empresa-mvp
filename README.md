@@ -1,14 +1,14 @@
 # Agro Empresa MVP
 
-Sistema web en desarrollo para digitalizar la gestion logistica y comercial de Itaven SAC
-una MYPE del sector agricola. El objetivo es construir una plataforma que
-permita administrar catalogo, clientes, ventas e inventario, reduciendo procesos
-manuales y dejando una base preparada para un futuro frontend comercial en React.
+Sistema web en desarrollo para digitalizar la gestión logística y comercial de Itaven SAC,
+una MYPE del sector agrícola. El objetivo es construir una plataforma que permita administrar
+catálogo, clientes, ventas e inventario, reduciendo procesos manuales y dejando una base
+preparada para un futuro frontend comercial en React.
 
 ## Estado
 
-Proyecto en etapa inicial de MVP. Actualmente el desarrollo se concentra en el
-backend con Spring Boot.
+Proyecto en etapa inicial de MVP. Actualmente el desarrollo se concentra en el backend con
+Spring Boot.
 
 ## Stack
 
@@ -18,13 +18,14 @@ backend con Spring Boot.
 - Spring Data JPA
 - Bean Validation
 - PostgreSQL
+- H2 para tests
 - Docker Compose
 - Maven Wrapper
 
-## Modulos Backend
+## Módulos Backend
 
-- Catalogo de categorias
-- Catalogo de productos
+- Catálogo de categorías
+- Catálogo de productos
 - Clientes
 - Ventas
 - Inventario y movimientos de stock
@@ -37,36 +38,37 @@ backend con Spring Boot.
 backend/agro-erp-api   API REST con Spring Boot
 infra                  Servicios de infraestructura local
 frontend               Futuro frontend React
-docs                   Documentacion del proyecto
+docs                   Documentación del proyecto
+```
+
+## Configuración Local
+
+El backend lee la configuración sensible desde variables de entorno. No subas archivos
+`.env` con credenciales reales. Usa `.env.example` solo como plantilla local.
+
+Desde la raíz del proyecto:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Antes de ejecutar el backend en PowerShell, define las variables necesarias:
+
+```powershell
+$env:DB_URL="jdbc:postgresql://localhost:5433/agro_db"
+$env:DB_USERNAME="agro_user"
+$env:DB_PASSWORD="change_me_for_local_dev"
 ```
 
 ## Ejecutar Base De Datos
 
-Desde la raiz del proyecto:
+Desde la raíz del proyecto:
 
 ```powershell
 docker compose -f infra/docker-compose.yml up -d
 ```
 
-La base de datos local de desarrollo queda disponible con los valores definidos
-en `infra/docker-compose.yml`.
-
-## Configuracion
-
-El backend lee la configuracion desde variables de entorno. Puedes usar
-`.env.example` como referencia para tu entorno local:
-
-```properties
-SERVER_PORT=8080
-DB_URL=jdbc:postgresql://localhost:5433/agro_db
-DB_USERNAME=agro_user
-DB_PASSWORD=change_me_for_local_dev
-JPA_DDL_AUTO=update
-JPA_SHOW_SQL=true
-```
-
-No subas archivos `.env` con credenciales reales. Los valores del ejemplo son
-solo para desarrollo local.
+Docker Compose toma los valores desde `.env`.
 
 ## Ejecutar Backend
 
@@ -82,6 +84,9 @@ http://localhost:8080
 ```
 
 ## Ejecutar Tests
+
+Los tests usan el perfil `test` y una base H2 en memoria, por lo que no dependen de
+PostgreSQL local.
 
 ```powershell
 cd backend/agro-erp-api
@@ -99,13 +104,13 @@ cd backend/agro-erp-api
 - `POST /api/v1/ventas`
 - `PATCH /api/v1/ventas/{id}/cancelar`
 - `GET /api/v1/inventario/movimientos`
+- `POST /api/v1/inventario/movimientos`
 - `GET /api/v1/inventario/movimientos/producto/{productoId}`
 
-## Proximos Pasos
+## Próximos Pasos
 
-- Fortalecer validaciones de requests
-- Completar movimientos de inventario
-- Agregar tests de reglas de negocio
-- Incorporar autenticacion y roles
+- Agregar autenticación y roles
 - Documentar API con OpenAPI/Swagger
+- Agregar paginación en listados
+- Incorporar control de concurrencia para stock
 - Construir frontend React para panel interno y web comercial

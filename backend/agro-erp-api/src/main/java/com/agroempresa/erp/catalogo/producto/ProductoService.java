@@ -6,7 +6,6 @@ import com.agroempresa.erp.catalogo.producto.dto.ProductoRequest;
 import com.agroempresa.erp.catalogo.producto.dto.ProductoResponse;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,20 +49,15 @@ public class ProductoService {
                 .toList();
     }
 
-@Transactional(readOnly = true)
-public ProductoResponse obtenerPorId(Long id) {
-    Producto producto = buscarProductoPorId(id);
-    return ProductoResponse.desdeEntidad(producto);
-}
-
-
+    @Transactional(readOnly = true)
+    public ProductoResponse obtenerPorId(Long id) {
+        Producto producto = buscarProductoPorId(id);
+        return ProductoResponse.desdeEntidad(producto);
+    }
 
     @Transactional(readOnly = true)
     public ProductoResponse buscarPorId(Long id) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Producto no encontrado"));
-
-        return ProductoResponse.desdeEntidad(producto);
+        return obtenerPorId(id);
     }
 
     @Transactional
@@ -90,8 +84,7 @@ public ProductoResponse obtenerPorId(Long id) {
 
     @Transactional
     public ProductoResponse actualizar(Long id, ProductoRequest request) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Producto no encontrado"));
+        Producto producto = buscarProductoPorId(id);
 
         if (productoRepository.existsByNombreIgnoreCaseAndIdNot(request.nombre(), id)) {
             throw new BusinessException("Ya existe otro producto con ese nombre");
@@ -113,8 +106,7 @@ public ProductoResponse obtenerPorId(Long id) {
 
     @Transactional
     public ProductoResponse desactivar(Long id) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Producto no encontrado"));
+        Producto producto = buscarProductoPorId(id);
 
         if (!producto.getActivo()) {
             throw new BusinessException("El producto ya se encuentra desactivado");
@@ -127,7 +119,9 @@ public ProductoResponse obtenerPorId(Long id) {
 
     private Categoria obtenerCategoriaActiva(Long categoriaId) {
         Categoria categoria = categoriaRepository.findById(categoriaId)
-                .orElseThrow(() -> new BusinessException("Categoría no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró la categoría con id: " + categoriaId
+                ));
 
         if (!categoria.getActivo()) {
             throw new BusinessException("No se puede usar una categoría desactivada");
@@ -136,12 +130,10 @@ public ProductoResponse obtenerPorId(Long id) {
         return categoria;
     }
 
-private Producto buscarProductoPorId(Long id) {
-    return productoRepository.findById(id)
-            .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró el producto con id: " + id));
-}
-
-
-
-
+    private Producto buscarProductoPorId(Long id) {
+        return productoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el producto con id: " + id
+                ));
+    }
 }
