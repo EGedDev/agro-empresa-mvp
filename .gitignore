@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Java / Maven
+**/target/
+**/build/
+**/.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Frontend
+**/node_modules/
+**/dist/
+**/.next/
+**/.vite/
+
+# Local tooling artifacts
+.github/java-upgrade/hooks/*.json
