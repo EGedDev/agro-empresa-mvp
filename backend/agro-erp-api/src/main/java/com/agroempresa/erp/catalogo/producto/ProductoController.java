@@ -1,14 +1,14 @@
 package com.agroempresa.erp.catalogo.producto;
 
+import com.agroempresa.erp.catalogo.producto.dto.ActualizarProductoRequest;
 import com.agroempresa.erp.catalogo.producto.dto.ProductoRequest;
 import com.agroempresa.erp.catalogo.producto.dto.ProductoResponse;
+import com.agroempresa.erp.common.pagination.PaginaResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/productos")
@@ -22,18 +22,34 @@ public class ProductoController {
     }
 
     @GetMapping
-    public List<ProductoResponse> listar() {
-        return productoService.listar();
+    public PaginaResponse<ProductoResponse> listar(
+            @RequestParam(required = false) String buscar,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) Long categoriaId,
+            @RequestParam(required = false) Boolean stockBajo,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort
+    ) {
+        return productoService.listar(buscar, activo, categoriaId, stockBajo, page, size, sort);
     }
 
     @GetMapping("/activos")
-    public List<ProductoResponse> listarActivos() {
-        return productoService.listarActivos();
+    public PaginaResponse<ProductoResponse> listarActivos(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort
+    ) {
+        return productoService.listarActivos(page, size, sort);
     }
 
     @GetMapping("/stock-bajo")
-    public List<ProductoResponse> listarConStockBajo() {
-        return productoService.listarConStockBajo();
+    public PaginaResponse<ProductoResponse> listarConStockBajo(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort
+    ) {
+        return productoService.listarConStockBajo(page, size, sort);
     }
 
     @GetMapping("/{id}")
@@ -50,7 +66,7 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ProductoResponse actualizar(
             @PathVariable @Positive(message = "El id debe ser mayor a cero") Long id,
-            @Valid @RequestBody ProductoRequest request
+            @Valid @RequestBody ActualizarProductoRequest request
     ) {
         return productoService.actualizar(id, request);
     }

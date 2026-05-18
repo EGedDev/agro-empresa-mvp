@@ -3,6 +3,7 @@ package com.agroempresa.erp.inventario;
 import com.agroempresa.erp.catalogo.categoria.Categoria;
 import com.agroempresa.erp.catalogo.producto.Producto;
 import com.agroempresa.erp.catalogo.producto.ProductoRepository;
+import com.agroempresa.erp.auditoria.AuditoriaService;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.inventario.dto.MovimientoInventarioResponse;
 import com.agroempresa.erp.inventario.dto.RegistrarMovimientoInventarioRequest;
@@ -31,6 +32,9 @@ class InventarioServiceTest {
     @Mock
     private ProductoRepository productoRepository;
 
+    @Mock
+    private AuditoriaService auditoriaService;
+
     @InjectMocks
     private InventarioService inventarioService;
 
@@ -44,7 +48,7 @@ class InventarioServiceTest {
                 "Ajuste por conteo físico"
         );
 
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto));
+        when(productoRepository.findByIdParaActualizar(1L)).thenReturn(Optional.of(producto));
         when(movimientoInventarioRepository.save(any(MovimientoInventario.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -72,7 +76,7 @@ class InventarioServiceTest {
                 "Intento no permitido"
         );
 
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto));
+        when(productoRepository.findByIdParaActualizar(1L)).thenReturn(Optional.of(producto));
 
         assertThatThrownBy(() -> inventarioService.registrarMovimientoManual(request))
                 .isInstanceOf(BusinessException.class)

@@ -4,13 +4,26 @@ import com.agroempresa.erp.catalogo.categoria.dto.CategoriaRequest;
 import com.agroempresa.erp.catalogo.categoria.dto.CategoriaResponse;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.pagination.PaginaResponse;
+import com.agroempresa.erp.common.pagination.Paginacion;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Map;
 
 @Service
 public class CategoriaService {
+
+    private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
+            "id", "id",
+            "nombre", "nombre",
+            "activo", "activo",
+            "creadoEn", "creadoEn",
+            "actualizadoEn", "actualizadoEn"
+    );
+
+    private static final Sort ORDEN_DEFAULT = Sort.by(Sort.Direction.ASC, "nombre");
 
     private final CategoriaRepository categoriaRepository;
 
@@ -19,11 +32,21 @@ public class CategoriaService {
     }
 
     @Transactional(readOnly = true)
-    public List<CategoriaResponse> listar() {
-        return categoriaRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    public PaginaResponse<CategoriaResponse> listar(
+            String buscar,
+            Boolean activo,
+            Integer pagina,
+            Integer tamanio,
+            String orden
+    ) {
+        return PaginaResponse.desde(
+                categoriaRepository.buscar(
+                        Paginacion.normalizarTexto(buscar),
+                        activo,
+                        Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)
+                ),
+                this::toResponse
+        );
     }
 
     @Transactional(readOnly = true)

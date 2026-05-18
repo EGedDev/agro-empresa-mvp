@@ -4,13 +4,27 @@ import com.agroempresa.erp.cliente.dto.ClienteRequest;
 import com.agroempresa.erp.cliente.dto.ClienteResponse;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.pagination.PaginaResponse;
+import com.agroempresa.erp.common.pagination.Paginacion;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Map;
 
 @Service
 public class ClienteService {
+
+    private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
+            "id", "id",
+            "nombre", "nombre",
+            "documentoIdentidad", "documentoIdentidad",
+            "activo", "activo",
+            "creadoEn", "creadoEn",
+            "actualizadoEn", "actualizadoEn"
+    );
+
+    private static final Sort ORDEN_DEFAULT = Sort.by(Sort.Direction.ASC, "nombre");
 
     private final ClienteRepository clienteRepository;
 
@@ -19,19 +33,26 @@ public class ClienteService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClienteResponse> listar() {
-        return clienteRepository.findAllByOrderByNombreAsc()
-                .stream()
-                .map(ClienteResponse::desdeEntidad)
-                .toList();
+    public PaginaResponse<ClienteResponse> listar(
+            String buscar,
+            Boolean activo,
+            Integer pagina,
+            Integer tamanio,
+            String orden
+    ) {
+        return PaginaResponse.desde(
+                clienteRepository.buscar(
+                        Paginacion.normalizarTexto(buscar),
+                        activo,
+                        Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)
+                ),
+                ClienteResponse::desdeEntidad
+        );
     }
 
     @Transactional(readOnly = true)
-    public List<ClienteResponse> listarActivos() {
-        return clienteRepository.findByActivoTrueOrderByNombreAsc()
-                .stream()
-                .map(ClienteResponse::desdeEntidad)
-                .toList();
+    public PaginaResponse<ClienteResponse> listarActivos(Integer pagina, Integer tamanio, String orden) {
+        return listar(null, true, pagina, tamanio, orden);
     }
 
     @Transactional(readOnly = true)

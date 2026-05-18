@@ -2,6 +2,8 @@ package com.agroempresa.erp.inventario;
 
 import com.agroempresa.erp.catalogo.producto.Producto;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +20,7 @@ public class MovimientoInventario {
     private Producto producto;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 40)
     private TipoMovimientoInventario tipo;
 

@@ -2,13 +2,12 @@ package com.agroempresa.erp.cliente;
 
 import com.agroempresa.erp.cliente.dto.ClienteRequest;
 import com.agroempresa.erp.cliente.dto.ClienteResponse;
+import com.agroempresa.erp.common.pagination.PaginaResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/clientes")
@@ -22,13 +21,23 @@ public class ClienteController {
     }
 
     @GetMapping
-    public List<ClienteResponse> listar() {
-        return clienteService.listar();
+    public PaginaResponse<ClienteResponse> listar(
+            @RequestParam(required = false) String buscar,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort
+    ) {
+        return clienteService.listar(buscar, activo, page, size, sort);
     }
 
     @GetMapping("/activos")
-    public List<ClienteResponse> listarActivos() {
-        return clienteService.listarActivos();
+    public PaginaResponse<ClienteResponse> listarActivos(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort
+    ) {
+        return clienteService.listarActivos(page, size, sort);
     }
 
     @GetMapping("/{id}")

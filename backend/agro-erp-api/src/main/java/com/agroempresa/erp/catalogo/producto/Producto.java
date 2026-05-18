@@ -66,14 +66,12 @@ public class Producto {
             String nombre,
             String descripcion,
             BigDecimal precioVenta,
-            Integer stockActual,
             Integer stockMinimo,
             Categoria categoria
     ) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precioVenta = precioVenta;
-        this.stockActual = stockActual;
         this.stockMinimo = stockMinimo;
         this.categoria = categoria;
     }
@@ -94,7 +92,12 @@ public class Producto {
 
     public void aumentarStock(Integer cantidad) {
         validarCantidadMovimiento(cantidad);
-        this.stockActual = this.stockActual + cantidad;
+
+        try {
+            this.stockActual = Math.addExact(this.stockActual, cantidad);
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException("El stock supera el límite permitido");
+        }
     }
 
     private void validarCantidadMovimiento(Integer cantidad) {

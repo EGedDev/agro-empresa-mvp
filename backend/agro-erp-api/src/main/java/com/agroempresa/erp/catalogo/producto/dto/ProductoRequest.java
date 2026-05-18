@@ -1,6 +1,7 @@
 package com.agroempresa.erp.catalogo.producto.dto;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +20,7 @@ public record ProductoRequest(
 
         @NotNull(message = "El precio de venta es obligatorio")
         @DecimalMin(value = "0.00", inclusive = true, message = "El precio de venta no puede ser negativo")
+        @Digits(integer = 10, fraction = 2, message = "El precio de venta debe tener como máximo 10 enteros y 2 decimales")
         BigDecimal precioVenta,
 
         @NotNull(message = "El stock actual es obligatorio")
