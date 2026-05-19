@@ -10,6 +10,7 @@ import com.agroempresa.erp.comercial.venta.VentaRepository;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.finanzas.EstadoPago;
 import com.agroempresa.erp.finanzas.MetodoPago;
+import com.agroempresa.erp.finanzas.caja.MovimientoCajaService;
 import com.agroempresa.erp.finanzas.pago.venta.dto.PagoVentaResponse;
 import com.agroempresa.erp.finanzas.pago.venta.dto.RegistrarPagoVentaRequest;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +41,9 @@ class PagoVentaServiceTest {
 
     @Mock
     private AuditoriaService auditoriaService;
+
+    @Mock
+    private MovimientoCajaService movimientoCajaService;
 
     @InjectMocks
     private PagoVentaService pagoVentaService;
@@ -67,6 +72,7 @@ class PagoVentaServiceTest {
         assertThat(venta.getTotalPagado()).isEqualByComparingTo("100.00");
         assertThat(venta.getSaldoPendiente()).isEqualByComparingTo("140.00");
         assertThat(venta.getEstadoPago()).isEqualTo(EstadoPago.PARCIAL);
+        verify(movimientoCajaService).registrarIngresoPorPagoVenta(any(PagoVenta.class));
     }
 
     @Test
@@ -86,6 +92,7 @@ class PagoVentaServiceTest {
         assertThat(venta.getTotalPagado()).isEqualByComparingTo("240.00");
         assertThat(venta.getSaldoPendiente()).isEqualByComparingTo("0.00");
         assertThat(venta.getEstadoPago()).isEqualTo(EstadoPago.PAGADA);
+        verify(movimientoCajaService).registrarIngresoPorPagoVenta(any(PagoVenta.class));
     }
 
     @Test
@@ -107,6 +114,7 @@ class PagoVentaServiceTest {
         assertThat(venta.getSaldoPendiente()).isEqualByComparingTo("240.00");
         assertThat(venta.getEstadoPago()).isEqualTo(EstadoPago.PENDIENTE);
         verifyNoInteractions(pagoVentaRepository);
+        verifyNoInteractions(movimientoCajaService);
     }
 
     @Test
@@ -127,6 +135,7 @@ class PagoVentaServiceTest {
 
         assertThat(venta.getEstado()).isEqualTo(EstadoVenta.CANCELADA);
         verifyNoInteractions(pagoVentaRepository);
+        verifyNoInteractions(movimientoCajaService);
     }
 
     private Venta crearVentaConTotal(Long ventaId, Integer cantidad) {

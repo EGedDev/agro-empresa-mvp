@@ -10,7 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Optional;
 
 public interface CompraRepository extends JpaRepository<Compra, Long> {
@@ -72,6 +74,106 @@ public interface CompraRepository extends JpaRepository<Compra, Long> {
             """)
     BigDecimal sumarSaldoPendientePorEstadoYPeriodo(
             @Param("estado") EstadoCompra estado,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT c
+            FROM Compra c
+            WHERE c.estado = :estado
+              AND c.estadoPago IN :estadosPago
+              AND c.saldoPendiente > 0
+              AND (:proveedorId IS NULL OR c.proveedor.id = :proveedorId)
+              AND (:estadoPago IS NULL OR c.estadoPago = :estadoPago)
+              AND (:desde IS NULL OR c.fechaCompra >= :desde)
+              AND (:hastaExclusivo IS NULL OR c.fechaCompra < :hastaExclusivo)
+              AND (:venceDesde IS NULL OR c.fechaVencimiento >= :venceDesde)
+              AND (:venceHasta IS NULL OR c.fechaVencimiento <= :venceHasta)
+              AND (
+                    :vencida IS NULL
+                    OR (:vencida = true AND c.fechaVencimiento < :fechaReferencia)
+                    OR (:vencida = false AND c.fechaVencimiento >= :fechaReferencia)
+              )
+            """)
+    Page<Compra> buscarCuentasPorPagar(
+            @Param("estado") EstadoCompra estado,
+            @Param("estadosPago") Collection<EstadoPago> estadosPago,
+            @Param("proveedorId") Long proveedorId,
+            @Param("estadoPago") EstadoPago estadoPago,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo,
+            @Param("venceDesde") LocalDate venceDesde,
+            @Param("venceHasta") LocalDate venceHasta,
+            @Param("vencida") Boolean vencida,
+            @Param("fechaReferencia") LocalDate fechaReferencia,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT COUNT(c)
+            FROM Compra c
+            WHERE c.estado = :estado
+              AND c.estadoPago IN :estadosPago
+              AND c.saldoPendiente > 0
+              AND (:desde IS NULL OR c.fechaCompra >= :desde)
+              AND (:hastaExclusivo IS NULL OR c.fechaCompra < :hastaExclusivo)
+            """)
+    long contarCuentasPorPagar(
+            @Param("estado") EstadoCompra estado,
+            @Param("estadosPago") Collection<EstadoPago> estadosPago,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT SUM(c.saldoPendiente)
+            FROM Compra c
+            WHERE c.estado = :estado
+              AND c.estadoPago IN :estadosPago
+              AND c.saldoPendiente > 0
+              AND (:desde IS NULL OR c.fechaCompra >= :desde)
+              AND (:hastaExclusivo IS NULL OR c.fechaCompra < :hastaExclusivo)
+            """)
+    BigDecimal sumarCuentasPorPagar(
+            @Param("estado") EstadoCompra estado,
+            @Param("estadosPago") Collection<EstadoPago> estadosPago,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT COUNT(c)
+            FROM Compra c
+            WHERE c.estado = :estado
+              AND c.estadoPago IN :estadosPago
+              AND c.saldoPendiente > 0
+              AND c.fechaVencimiento < :fechaReferencia
+              AND (:desde IS NULL OR c.fechaCompra >= :desde)
+              AND (:hastaExclusivo IS NULL OR c.fechaCompra < :hastaExclusivo)
+            """)
+    long contarCuentasPorPagarVencidas(
+            @Param("estado") EstadoCompra estado,
+            @Param("estadosPago") Collection<EstadoPago> estadosPago,
+            @Param("fechaReferencia") LocalDate fechaReferencia,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT SUM(c.saldoPendiente)
+            FROM Compra c
+            WHERE c.estado = :estado
+              AND c.estadoPago IN :estadosPago
+              AND c.saldoPendiente > 0
+              AND c.fechaVencimiento < :fechaReferencia
+              AND (:desde IS NULL OR c.fechaCompra >= :desde)
+              AND (:hastaExclusivo IS NULL OR c.fechaCompra < :hastaExclusivo)
+            """)
+    BigDecimal sumarCuentasPorPagarVencidas(
+            @Param("estado") EstadoCompra estado,
+            @Param("estadosPago") Collection<EstadoPago> estadosPago,
+            @Param("fechaReferencia") LocalDate fechaReferencia,
             @Param("desde") LocalDateTime desde,
             @Param("hastaExclusivo") LocalDateTime hastaExclusivo
     );

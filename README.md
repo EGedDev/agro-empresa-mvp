@@ -36,6 +36,9 @@ Spring Boot.
 - Compras
 - Inventario y movimientos de stock
 - Pagos de ventas y compras
+- Caja y movimientos financieros
+- Cierres de caja por periodo
+- Cartera de cuentas por cobrar y pagar
 - Autenticación, roles y auditoría
 - Manejo global de errores
 - Health check
@@ -196,6 +199,16 @@ cd backend/agro-erp-api
 - `GET /api/v1/inventario/movimientos/producto/{productoId}`
 - `GET /api/v1/auditoria/eventos`
 - `GET /api/v1/reportes/finanzas/resumen`
+- `GET /api/v1/reportes/inventario/resumen`
+- `GET /api/v1/finanzas/caja/movimientos`
+- `GET /api/v1/finanzas/caja/resumen`
+- `GET /api/v1/finanzas/caja/resumen/metodos`
+- `GET /api/v1/finanzas/caja/cierres`
+- `GET /api/v1/finanzas/caja/cierres/diferencias`
+- `POST /api/v1/finanzas/caja/cierres`
+- `GET /api/v1/finanzas/cartera/cuentas-por-cobrar`
+- `GET /api/v1/finanzas/cartera/cuentas-por-pagar`
+- `GET /api/v1/finanzas/cartera/resumen`
 
 ### Paginacion y filtros
 
@@ -231,10 +244,57 @@ Filtros disponibles:
 - `GET /api/v1/inventario/movimientos?productoId=&tipo=&referenciaTipo=&desde=&hasta=`
 - `GET /api/v1/auditoria/eventos?username=&accion=&recursoTipo=&recursoId=&correlationId=&desde=&hasta=`
 - `GET /api/v1/reportes/finanzas/resumen?desde=&hasta=`
+- `GET /api/v1/reportes/inventario/resumen?desde=&hasta=`
+- `GET /api/v1/finanzas/caja/movimientos?tipo=&metodoPago=&referenciaTipo=&referenciaId=&desde=&hasta=`
+- `GET /api/v1/finanzas/caja/resumen?desde=&hasta=`
+- `GET /api/v1/finanzas/caja/resumen/metodos?desde=&hasta=`
+- `GET /api/v1/finanzas/caja/cierres?desde=&hasta=`
+- `GET /api/v1/finanzas/caja/cierres/diferencias?desde=&hasta=&metodoPago=&soloConDiferencia=`
+- `GET /api/v1/finanzas/cartera/cuentas-por-cobrar?clienteId=&estadoPago=&desde=&hasta=&venceDesde=&venceHasta=&vencida=`
+- `GET /api/v1/finanzas/cartera/cuentas-por-pagar?proveedorId=&estadoPago=&desde=&hasta=&venceDesde=&venceHasta=&vencida=`
+- `GET /api/v1/finanzas/cartera/resumen?desde=&hasta=`
 - `GET /api/v1/ventas/{ventaId}/pagos?metodoPago=&desde=&hasta=`
 - `GET /api/v1/compras/{compraId}/pagos?metodoPago=&desde=&hasta=`
 
 Las fechas usan formato ISO `YYYY-MM-DD`.
+
+En ventas y compras, `fechaVencimiento` es opcional. Si no se envia, la API usa el dia de
+registro como vencimiento para mantener compatibilidad con ventas/compras al contado.
+
+### Cierres de caja
+
+El cierre de caja calcula ingresos, egresos y saldo neto desde `movimientos_caja`.
+Opcionalmente puede registrar el saldo reportado por metodo de pago para controlar
+diferencias de efectivo, transferencias, billeteras u otros medios.
+
+```json
+{
+  "desde": "2026-05-19",
+  "hasta": "2026-05-19",
+  "saldoReportado": 4.00,
+  "observaciones": "Cierre diario",
+  "metodos": [
+    {
+      "metodoPago": "EFECTIVO",
+      "saldoReportado": 16.00
+    },
+    {
+      "metodoPago": "TRANSFERENCIA",
+      "saldoReportado": -12.00
+    }
+  ]
+}
+```
+
+Si se envia `metodos`, la API exige que todos los metodos con movimientos en el periodo
+tengan saldo reportado y que la suma por metodo coincida con `saldoReportado`.
+
+Despues de registrar un cierre, la API bloquea nuevos movimientos de caja con fecha dentro
+del periodo cerrado. Esto evita que pagos posteriores alteren saldos ya conciliados.
+
+El reporte `GET /api/v1/finanzas/caja/cierres/diferencias` muestra cierres con sobrantes
+o faltantes. Por defecto devuelve solo cierres con diferencia; usa `soloConDiferencia=false`
+para incluir cierres cuadrados. Tambien permite filtrar por `metodoPago`.
 
 ### Idempotencia en operaciones criticas
 
@@ -245,6 +305,7 @@ Los `POST` que pueden duplicar dinero o stock exigen el header `Idempotency-Key`
 - `POST /api/v1/ventas/{ventaId}/pagos`
 - `POST /api/v1/compras/{compraId}/pagos`
 - `POST /api/v1/inventario/movimientos`
+- `POST /api/v1/finanzas/caja/cierres`
 
 Reglas:
 

@@ -8,6 +8,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,9 @@ public class Venta {
 
     @Column(nullable = false)
     private LocalDateTime fechaVenta;
+
+    @Column(nullable = false)
+    private LocalDate fechaVencimiento;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
@@ -59,8 +63,13 @@ public class Venta {
     }
 
     public Venta(Cliente cliente) {
+        this(cliente, LocalDate.now());
+    }
+
+    public Venta(Cliente cliente, LocalDate fechaVencimiento) {
         this.cliente = cliente;
         this.fechaVenta = LocalDateTime.now();
+        this.fechaVencimiento = fechaVencimiento == null ? LocalDate.now() : fechaVencimiento;
         this.estado = EstadoVenta.REGISTRADA;
         this.total = BigDecimal.ZERO;
         this.totalPagado = BigDecimal.ZERO;
@@ -146,6 +155,10 @@ public class Venta {
 
     public LocalDateTime getFechaVenta() {
         return fechaVenta;
+    }
+
+    public LocalDate getFechaVencimiento() {
+        return fechaVencimiento;
     }
 
     public EstadoVenta getEstado() {

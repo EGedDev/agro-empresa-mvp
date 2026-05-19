@@ -30,7 +30,8 @@ public class OpenApiConfig {
             "/api/v1/compras",
             "/api/v1/ventas/{ventaId}/pagos",
             "/api/v1/compras/{compraId}/pagos",
-            "/api/v1/inventario/movimientos"
+            "/api/v1/inventario/movimientos",
+            "/api/v1/finanzas/caja/cierres"
     );
 
     private static final Set<String> RUTAS_PUBLICAS = Set.of(

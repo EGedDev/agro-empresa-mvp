@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,6 +78,7 @@ class CompraServiceTest {
         assertThat(response.saldoPendiente()).isEqualByComparingTo(new BigDecimal("91.50"));
         assertThat(response.detalles()).hasSize(1);
         assertThat(response.total()).isEqualByComparingTo(new BigDecimal("91.50"));
+        assertThat(response.fechaVencimiento()).isEqualTo(LocalDate.now());
 
         verify(inventarioService).registrarEntradaPorCompra(
                 producto,

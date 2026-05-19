@@ -7,6 +7,8 @@ import com.agroempresa.erp.cliente.ClienteRepository;
 import com.agroempresa.erp.comercial.compra.CompraRepository;
 import com.agroempresa.erp.comercial.venta.VentaRepository;
 import com.agroempresa.erp.common.tracing.RequestTraceContext;
+import com.agroempresa.erp.finanzas.caja.CierreCajaRepository;
+import com.agroempresa.erp.finanzas.caja.MovimientoCajaRepository;
 import com.agroempresa.erp.finanzas.pago.compra.PagoCompraRepository;
 import com.agroempresa.erp.finanzas.pago.venta.PagoVentaRepository;
 import com.agroempresa.erp.idempotencia.SolicitudIdempotenteRepository;
@@ -57,6 +59,12 @@ class FlujosCriticosHttpIntegrationTest {
     private PagoVentaRepository pagoVentaRepository;
 
     @Autowired
+    private CierreCajaRepository cierreCajaRepository;
+
+    @Autowired
+    private MovimientoCajaRepository movimientoCajaRepository;
+
+    @Autowired
     private PagoCompraRepository pagoCompraRepository;
 
     @Autowired
@@ -92,6 +100,8 @@ class FlujosCriticosHttpIntegrationTest {
     @BeforeEach
     void limpiarDatos() {
         solicitudIdempotenteRepository.deleteAll();
+        cierreCajaRepository.deleteAll();
+        movimientoCajaRepository.deleteAll();
         pagoVentaRepository.deleteAll();
         pagoCompraRepository.deleteAll();
         movimientoInventarioRepository.deleteAll();

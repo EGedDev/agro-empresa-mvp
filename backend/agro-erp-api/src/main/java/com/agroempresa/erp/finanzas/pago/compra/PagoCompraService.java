@@ -9,6 +9,7 @@ import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.finanzas.MetodoPago;
+import com.agroempresa.erp.finanzas.caja.MovimientoCajaService;
 import com.agroempresa.erp.finanzas.pago.compra.dto.PagoCompraResponse;
 import com.agroempresa.erp.finanzas.pago.compra.dto.RegistrarPagoCompraRequest;
 import org.springframework.data.domain.Sort;
@@ -36,15 +37,18 @@ public class PagoCompraService {
     private final PagoCompraRepository pagoCompraRepository;
     private final CompraRepository compraRepository;
     private final AuditoriaService auditoriaService;
+    private final MovimientoCajaService movimientoCajaService;
 
     public PagoCompraService(
             PagoCompraRepository pagoCompraRepository,
             CompraRepository compraRepository,
-            AuditoriaService auditoriaService
+            AuditoriaService auditoriaService,
+            MovimientoCajaService movimientoCajaService
     ) {
         this.pagoCompraRepository = pagoCompraRepository;
         this.compraRepository = compraRepository;
         this.auditoriaService = auditoriaService;
+        this.movimientoCajaService = movimientoCajaService;
     }
 
     @Transactional(readOnly = true)
@@ -117,6 +121,8 @@ public class PagoCompraService {
                 compra.getId(),
                 "Monto: " + pagoGuardado.getMonto()
         );
+
+        movimientoCajaService.registrarEgresoPorPagoCompra(pagoGuardado);
 
         return PagoCompraResponse.desdeEntidad(pagoGuardado);
     }

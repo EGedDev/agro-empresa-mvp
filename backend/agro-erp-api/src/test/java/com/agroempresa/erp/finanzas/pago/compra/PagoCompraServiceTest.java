@@ -9,6 +9,7 @@ import com.agroempresa.erp.comercial.compra.EstadoCompra;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.finanzas.EstadoPago;
 import com.agroempresa.erp.finanzas.MetodoPago;
+import com.agroempresa.erp.finanzas.caja.MovimientoCajaService;
 import com.agroempresa.erp.finanzas.pago.compra.dto.PagoCompraResponse;
 import com.agroempresa.erp.finanzas.pago.compra.dto.RegistrarPagoCompraRequest;
 import com.agroempresa.erp.proveedor.Proveedor;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +41,9 @@ class PagoCompraServiceTest {
 
     @Mock
     private AuditoriaService auditoriaService;
+
+    @Mock
+    private MovimientoCajaService movimientoCajaService;
 
     @InjectMocks
     private PagoCompraService pagoCompraService;
@@ -67,6 +72,7 @@ class PagoCompraServiceTest {
         assertThat(compra.getTotalPagado()).isEqualByComparingTo("30.00");
         assertThat(compra.getSaldoPendiente()).isEqualByComparingTo("60.00");
         assertThat(compra.getEstadoPago()).isEqualTo(EstadoPago.PARCIAL);
+        verify(movimientoCajaService).registrarEgresoPorPagoCompra(any(PagoCompra.class));
     }
 
     @Test
@@ -86,6 +92,7 @@ class PagoCompraServiceTest {
         assertThat(compra.getTotalPagado()).isEqualByComparingTo("90.00");
         assertThat(compra.getSaldoPendiente()).isEqualByComparingTo("0.00");
         assertThat(compra.getEstadoPago()).isEqualTo(EstadoPago.PAGADA);
+        verify(movimientoCajaService).registrarEgresoPorPagoCompra(any(PagoCompra.class));
     }
 
     @Test
@@ -107,6 +114,7 @@ class PagoCompraServiceTest {
         assertThat(compra.getSaldoPendiente()).isEqualByComparingTo("90.00");
         assertThat(compra.getEstadoPago()).isEqualTo(EstadoPago.PENDIENTE);
         verifyNoInteractions(pagoCompraRepository);
+        verifyNoInteractions(movimientoCajaService);
     }
 
     @Test
@@ -127,6 +135,7 @@ class PagoCompraServiceTest {
 
         assertThat(compra.getEstado()).isEqualTo(EstadoCompra.CANCELADA);
         verifyNoInteractions(pagoCompraRepository);
+        verifyNoInteractions(movimientoCajaService);
     }
 
     private Compra crearCompraConTotal(Long compraId, Integer cantidad) {

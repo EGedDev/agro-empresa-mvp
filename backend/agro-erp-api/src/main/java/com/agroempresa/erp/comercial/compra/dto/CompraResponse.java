@@ -5,6 +5,7 @@ import com.agroempresa.erp.comercial.compra.EstadoCompra;
 import com.agroempresa.erp.finanzas.EstadoPago;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,6 +14,7 @@ public record CompraResponse(
         Long proveedorId,
         String proveedorNombre,
         LocalDateTime fechaCompra,
+        LocalDate fechaVencimiento,
         EstadoCompra estado,
         BigDecimal total,
         BigDecimal totalPagado,
@@ -29,6 +31,7 @@ public record CompraResponse(
                 compra.getProveedor().getId(),
                 compra.getProveedor().getNombre(),
                 compra.getFechaCompra(),
+                compra.getFechaVencimiento(),
                 compra.getEstado(),
                 compra.getTotal(),
                 compra.getTotalPagado(),

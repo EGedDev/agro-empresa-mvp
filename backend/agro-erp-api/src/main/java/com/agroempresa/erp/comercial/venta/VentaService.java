@@ -31,6 +31,7 @@ public class VentaService {
     private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
             "id", "id",
             "fechaVenta", "fechaVenta",
+            "fechaVencimiento", "fechaVencimiento",
             "total", "total",
             "totalPagado", "totalPagado",
             "saldoPendiente", "saldoPendiente",
@@ -134,7 +135,7 @@ public class VentaService {
 
         validarClienteActivo(cliente);
 
-        Venta venta = new Venta(cliente);
+        Venta venta = new Venta(cliente, request.fechaVencimiento());
 
         List<MovimientoInventarioPendiente> movimientosPendientes = new ArrayList<>();
         List<DetalleVentaValidado> detallesValidados = validarDetallesVenta(consolidarDetalles(request.detalles()));

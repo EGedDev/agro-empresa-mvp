@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 public interface MovimientoInventarioRepository extends JpaRepository<MovimientoInventario, Long> {
 
@@ -26,5 +27,31 @@ public interface MovimientoInventarioRepository extends JpaRepository<Movimiento
             @Param("desde") LocalDateTime desde,
             @Param("hastaExclusivo") LocalDateTime hastaExclusivo,
             Pageable pageable
+    );
+
+    @Query("""
+            SELECT COUNT(m)
+            FROM MovimientoInventario m
+            WHERE m.tipo IN :tipos
+              AND m.creadoEn >= :desde
+              AND m.creadoEn < :hastaExclusivo
+            """)
+    long contarPorTiposYPeriodo(
+            @Param("tipos") Collection<TipoMovimientoInventario> tipos,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT SUM(m.cantidad)
+            FROM MovimientoInventario m
+            WHERE m.tipo IN :tipos
+              AND m.creadoEn >= :desde
+              AND m.creadoEn < :hastaExclusivo
+            """)
+    Long sumarCantidadPorTiposYPeriodo(
+            @Param("tipos") Collection<TipoMovimientoInventario> tipos,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
     );
 }

@@ -3,6 +3,8 @@ package com.agroempresa.erp.common.validation;
 import com.agroempresa.erp.catalogo.producto.dto.ProductoRequest;
 import com.agroempresa.erp.comercial.compra.dto.CompraDetalleRequest;
 import com.agroempresa.erp.finanzas.MetodoPago;
+import com.agroempresa.erp.finanzas.caja.dto.RegistrarCierreCajaRequest;
+import com.agroempresa.erp.finanzas.caja.dto.RegistrarCierreMetodoPagoRequest;
 import com.agroempresa.erp.finanzas.pago.compra.dto.RegistrarPagoCompraRequest;
 import com.agroempresa.erp.finanzas.pago.venta.dto.RegistrarPagoVentaRequest;
 import jakarta.validation.ConstraintViolation;
@@ -12,6 +14,7 @@ import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,5 +89,36 @@ class ValidacionMonetariaTest {
         assertThat(errores)
                 .extracting(ConstraintViolation::getMessage)
                 .contains("El monto del pago debe tener como máximo 10 enteros y 2 decimales");
+    }
+
+    @Test
+    void registrarCierreCajaRequestRechazaSaldoReportadoConMasDeDosDecimales() {
+        RegistrarCierreCajaRequest request = new RegistrarCierreCajaRequest(
+                LocalDate.now(),
+                LocalDate.now(),
+                new BigDecimal("10.999"),
+                null,
+                null
+        );
+
+        Set<ConstraintViolation<RegistrarCierreCajaRequest>> errores = validator.validate(request);
+
+        assertThat(errores)
+                .extracting(ConstraintViolation::getMessage)
+                .contains("El saldo reportado debe tener como maximo 10 enteros y 2 decimales");
+    }
+
+    @Test
+    void registrarCierreMetodoPagoRequestRechazaSaldoReportadoConMasDeDosDecimales() {
+        RegistrarCierreMetodoPagoRequest request = new RegistrarCierreMetodoPagoRequest(
+                MetodoPago.EFECTIVO,
+                new BigDecimal("10.999")
+        );
+
+        Set<ConstraintViolation<RegistrarCierreMetodoPagoRequest>> errores = validator.validate(request);
+
+        assertThat(errores)
+                .extracting(ConstraintViolation::getMessage)
+                .contains("El saldo reportado por metodo debe tener como maximo 10 enteros y 2 decimales");
     }
 }

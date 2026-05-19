@@ -33,6 +33,7 @@ public class CompraService {
     private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
             "id", "id",
             "fechaCompra", "fechaCompra",
+            "fechaVencimiento", "fechaVencimiento",
             "total", "total",
             "totalPagado", "totalPagado",
             "saldoPendiente", "saldoPendiente",
@@ -142,7 +143,7 @@ public class CompraService {
                 true
         );
 
-        Compra compra = new Compra(proveedor);
+        Compra compra = new Compra(proveedor, request.fechaVencimiento());
         List<MovimientoInventarioPendiente> movimientosPendientes = new ArrayList<>();
 
         for (CompraDetalleRequest detalleRequest : request.detalles()) {

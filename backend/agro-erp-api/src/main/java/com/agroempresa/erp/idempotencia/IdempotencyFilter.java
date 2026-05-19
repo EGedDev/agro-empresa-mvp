@@ -26,6 +26,7 @@ public class IdempotencyFilter extends OncePerRequestFilter {
     private static final Pattern PAGO_VENTA = Pattern.compile("^/api/v1/ventas/\\d+/pagos/?$");
     private static final Pattern PAGO_COMPRA = Pattern.compile("^/api/v1/compras/\\d+/pagos/?$");
     private static final Pattern INVENTARIO = Pattern.compile("^/api/v1/inventario/movimientos/?$");
+    private static final Pattern CIERRE_CAJA = Pattern.compile("^/api/v1/finanzas/caja/cierres/?$");
 
     private final IdempotencyService idempotencyService;
 
@@ -108,7 +109,8 @@ public class IdempotencyFilter extends OncePerRequestFilter {
                 || COMPRAS.matcher(ruta).matches()
                 || PAGO_VENTA.matcher(ruta).matches()
                 || PAGO_COMPRA.matcher(ruta).matches()
-                || INVENTARIO.matcher(ruta).matches();
+                || INVENTARIO.matcher(ruta).matches()
+                || CIERRE_CAJA.matcher(ruta).matches();
     }
 
     private boolean esRespuestaExitosa(int status) {

@@ -34,6 +34,16 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     boolean existsByNombreIgnoreCaseAndIdNot(String nombre, Long id);
 
+    long countByActivoTrue();
+
+    @Query("""
+            SELECT COUNT(p)
+            FROM Producto p
+            WHERE p.activo = true
+              AND p.stockActual <= p.stockMinimo
+            """)
+    long contarActivosConStockBajo();
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Producto p WHERE p.id = :id")
     Optional<Producto> findByIdParaActualizar(@Param("id") Long id);

@@ -48,6 +48,9 @@ class OpenApiDocumentationIntegrationTest {
         JsonNode pagoVentaPost = api.path("paths").path("/api/v1/ventas/{ventaId}/pagos").path("post");
         assertThat(tieneHeaderIdempotencyKey(pagoVentaPost)).isTrue();
 
+        JsonNode cierreCajaPost = api.path("paths").path("/api/v1/finanzas/caja/cierres").path("post");
+        assertThat(tieneHeaderIdempotencyKey(cierreCajaPost)).isTrue();
+
         JsonNode loginPost = api.path("paths").path("/api/v1/auth/login").path("post");
         assertThat(loginPost.path("security").isArray()).isTrue();
         assertThat(loginPost.path("security").size()).isZero();
