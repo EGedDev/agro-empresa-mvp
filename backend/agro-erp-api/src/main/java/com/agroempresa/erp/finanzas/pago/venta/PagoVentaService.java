@@ -10,6 +10,7 @@ import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.finanzas.MetodoPago;
 import com.agroempresa.erp.finanzas.caja.MovimientoCajaService;
+import com.agroempresa.erp.finanzas.pago.venta.dto.AnularPagoVentaRequest;
 import com.agroempresa.erp.finanzas.pago.venta.dto.PagoVentaResponse;
 import com.agroempresa.erp.finanzas.pago.venta.dto.RegistrarPagoVentaRequest;
 import org.springframework.data.domain.Sort;
@@ -127,6 +128,51 @@ public class PagoVentaService {
         return PagoVentaResponse.desdeEntidad(pagoGuardado);
     }
 
+    @Transactional
+    public PagoVentaResponse anular(Long ventaId, Long pagoId, AnularPagoVentaRequest request) {
+        if (ventaId == null) {
+            throw new BusinessException("La venta es obligatoria");
+        }
+
+        if (pagoId == null) {
+            throw new BusinessException("El pago es obligatorio");
+        }
+
+        validarRequestAnulacion(request);
+
+        Venta venta = ventaRepository.findByIdParaActualizar(ventaId)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontro la venta con id: " + ventaId
+                ));
+
+        PagoVenta pagoVenta = pagoVentaRepository.findByIdYVentaId(pagoId, ventaId)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontro el pago con id: " + pagoId + " para la venta indicada"
+                ));
+
+        if (pagoVenta.isAnulado()) {
+            throw new BusinessException("El pago ya fue anulado");
+        }
+
+        try {
+            venta.anularPago(pagoVenta.getMonto());
+            pagoVenta.anular(normalizar(request.motivo()));
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            throw new BusinessException(ex.getMessage());
+        }
+
+        auditoriaService.registrar(
+                "PAGO_VENTA_ANULADO",
+                "VENTA",
+                venta.getId(),
+                "Pago: " + pagoVenta.getId() + ", monto: " + pagoVenta.getMonto()
+        );
+
+        movimientoCajaService.registrarReversoIngresoPorPagoVenta(pagoVenta);
+
+        return PagoVentaResponse.desdeEntidad(pagoVenta);
+    }
+
     private void validarRequest(RegistrarPagoVentaRequest request) {
         if (request == null) {
             throw new BusinessException("Los datos del pago son obligatorios");
@@ -138,6 +184,16 @@ public class PagoVentaService {
 
         if (request.metodoPago() == null) {
             throw new BusinessException("El método de pago es obligatorio");
+        }
+    }
+
+    private void validarRequestAnulacion(AnularPagoVentaRequest request) {
+        if (request == null) {
+            throw new BusinessException("Los datos de anulacion del pago son obligatorios");
+        }
+
+        if (request.motivo() == null || request.motivo().isBlank()) {
+            throw new BusinessException("El motivo de anulacion es obligatorio");
         }
     }
 

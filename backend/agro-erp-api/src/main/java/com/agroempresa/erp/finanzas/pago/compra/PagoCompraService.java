@@ -10,6 +10,7 @@ import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.finanzas.MetodoPago;
 import com.agroempresa.erp.finanzas.caja.MovimientoCajaService;
+import com.agroempresa.erp.finanzas.pago.compra.dto.AnularPagoCompraRequest;
 import com.agroempresa.erp.finanzas.pago.compra.dto.PagoCompraResponse;
 import com.agroempresa.erp.finanzas.pago.compra.dto.RegistrarPagoCompraRequest;
 import org.springframework.data.domain.Sort;
@@ -127,6 +128,51 @@ public class PagoCompraService {
         return PagoCompraResponse.desdeEntidad(pagoGuardado);
     }
 
+    @Transactional
+    public PagoCompraResponse anular(Long compraId, Long pagoId, AnularPagoCompraRequest request) {
+        if (compraId == null) {
+            throw new BusinessException("La compra es obligatoria");
+        }
+
+        if (pagoId == null) {
+            throw new BusinessException("El pago es obligatorio");
+        }
+
+        validarRequestAnulacion(request);
+
+        Compra compra = compraRepository.findByIdParaActualizar(compraId)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontro la compra con id: " + compraId
+                ));
+
+        PagoCompra pagoCompra = pagoCompraRepository.findByIdYCompraId(pagoId, compraId)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontro el pago con id: " + pagoId + " para la compra indicada"
+                ));
+
+        if (pagoCompra.isAnulado()) {
+            throw new BusinessException("El pago ya fue anulado");
+        }
+
+        try {
+            compra.anularPago(pagoCompra.getMonto());
+            pagoCompra.anular(normalizar(request.motivo()));
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            throw new BusinessException(ex.getMessage());
+        }
+
+        auditoriaService.registrar(
+                "PAGO_COMPRA_ANULADO",
+                "COMPRA",
+                compra.getId(),
+                "Pago: " + pagoCompra.getId() + ", monto: " + pagoCompra.getMonto()
+        );
+
+        movimientoCajaService.registrarReversoEgresoPorPagoCompra(pagoCompra);
+
+        return PagoCompraResponse.desdeEntidad(pagoCompra);
+    }
+
     private void validarRequest(RegistrarPagoCompraRequest request) {
         if (request == null) {
             throw new BusinessException("Los datos del pago son obligatorios");
@@ -138,6 +184,16 @@ public class PagoCompraService {
 
         if (request.metodoPago() == null) {
             throw new BusinessException("El método de pago es obligatorio");
+        }
+    }
+
+    private void validarRequestAnulacion(AnularPagoCompraRequest request) {
+        if (request == null) {
+            throw new BusinessException("Los datos de anulacion del pago son obligatorios");
+        }
+
+        if (request.motivo() == null || request.motivo().isBlank()) {
+            throw new BusinessException("El motivo de anulacion es obligatorio");
         }
     }
 

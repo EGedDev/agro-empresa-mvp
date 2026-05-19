@@ -13,7 +13,10 @@ public record PagoCompraResponse(
         MetodoPago metodoPago,
         String referencia,
         LocalDateTime fechaPago,
-        LocalDateTime creadoEn
+        LocalDateTime creadoEn,
+        boolean anulado,
+        LocalDateTime fechaAnulacion,
+        String motivoAnulacion
 ) {
 
     public static PagoCompraResponse desdeEntidad(PagoCompra pagoCompra) {
@@ -24,7 +27,10 @@ public record PagoCompraResponse(
                 pagoCompra.getMetodoPago(),
                 pagoCompra.getReferencia(),
                 pagoCompra.getFechaPago(),
-                pagoCompra.getCreadoEn()
+                pagoCompra.getCreadoEn(),
+                pagoCompra.isAnulado(),
+                pagoCompra.getFechaAnulacion(),
+                pagoCompra.getMotivoAnulacion()
         );
     }
 }

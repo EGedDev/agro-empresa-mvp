@@ -36,6 +36,8 @@ Spring Boot.
 - Compras
 - Inventario y movimientos de stock
 - Pagos de ventas y compras
+- Anulaciones de pagos con trazabilidad contable
+- Devoluciones de ventas y compras con ajuste de inventario
 - Caja y movimientos financieros
 - Cierres de caja por periodo
 - Cartera de cuentas por cobrar y pagar
@@ -190,10 +192,16 @@ cd backend/agro-erp-api
 - `PATCH /api/v1/ventas/{id}/cancelar`
 - `GET /api/v1/ventas/{ventaId}/pagos`
 - `POST /api/v1/ventas/{ventaId}/pagos`
+- `POST /api/v1/ventas/{ventaId}/pagos/{pagoId}/anular`
+- `GET /api/v1/ventas/{ventaId}/devoluciones`
+- `POST /api/v1/ventas/{ventaId}/devoluciones`
 - `POST /api/v1/compras`
 - `PATCH /api/v1/compras/{id}/cancelar`
 - `GET /api/v1/compras/{compraId}/pagos`
 - `POST /api/v1/compras/{compraId}/pagos`
+- `POST /api/v1/compras/{compraId}/pagos/{pagoId}/anular`
+- `GET /api/v1/compras/{compraId}/devoluciones`
+- `POST /api/v1/compras/{compraId}/devoluciones`
 - `GET /api/v1/inventario/movimientos`
 - `POST /api/v1/inventario/movimientos`
 - `GET /api/v1/inventario/movimientos/producto/{productoId}`
@@ -255,11 +263,41 @@ Filtros disponibles:
 - `GET /api/v1/finanzas/cartera/resumen?desde=&hasta=`
 - `GET /api/v1/ventas/{ventaId}/pagos?metodoPago=&desde=&hasta=`
 - `GET /api/v1/compras/{compraId}/pagos?metodoPago=&desde=&hasta=`
+- `GET /api/v1/ventas/{ventaId}/devoluciones`
+- `GET /api/v1/compras/{compraId}/devoluciones`
 
 Las fechas usan formato ISO `YYYY-MM-DD`.
 
 En ventas y compras, `fechaVencimiento` es opcional. Si no se envia, la API usa el dia de
 registro como vencimiento para mantener compatibilidad con ventas/compras al contado.
+
+### Anulaciones de pagos
+
+Los pagos no se eliminan fisicamente. Para corregir un pago se usa una anulacion con motivo
+obligatorio:
+
+- `POST /api/v1/ventas/{ventaId}/pagos/{pagoId}/anular`
+- `POST /api/v1/compras/{compraId}/pagos/{pagoId}/anular`
+
+La anulacion marca el pago como `anulado`, recalcula el saldo de la venta o compra y registra
+un movimiento inverso en caja (`REVERSO_PAGO_VENTA` o `REVERSO_PAGO_COMPRA`). Si el periodo
+de caja del dia esta cerrado, la anulacion se rechaza para no alterar saldos conciliados.
+
+### Devoluciones
+
+Las devoluciones se registran sobre detalles originales de venta o compra para evitar
+ambiguedad cuando un producto aparece en mas de una linea. Cada devolucion conserva motivo,
+fecha, total y detalle aplicado.
+
+- `POST /api/v1/ventas/{ventaId}/devoluciones`: reduce el total/saldo de la venta y registra
+  una entrada de inventario `ENTRADA_POR_DEVOLUCION_VENTA`.
+- `POST /api/v1/compras/{compraId}/devoluciones`: reduce el total/saldo de la compra y registra
+  una salida de inventario `SALIDA_POR_DEVOLUCION_COMPRA`.
+
+La API bloquea devoluciones que superen la cantidad disponible del detalle original. Tambien
+bloquea devoluciones que dejarian pagos registrados por encima del nuevo total; primero se debe
+anular o ajustar el pago correspondiente. En compras, si no hay stock suficiente para devolver
+al proveedor, la operacion se rechaza.
 
 ### Cierres de caja
 
@@ -304,6 +342,10 @@ Los `POST` que pueden duplicar dinero o stock exigen el header `Idempotency-Key`
 - `POST /api/v1/compras`
 - `POST /api/v1/ventas/{ventaId}/pagos`
 - `POST /api/v1/compras/{compraId}/pagos`
+- `POST /api/v1/ventas/{ventaId}/pagos/{pagoId}/anular`
+- `POST /api/v1/compras/{compraId}/pagos/{pagoId}/anular`
+- `POST /api/v1/ventas/{ventaId}/devoluciones`
+- `POST /api/v1/compras/{compraId}/devoluciones`
 - `POST /api/v1/inventario/movimientos`
 - `POST /api/v1/finanzas/caja/cierres`
 

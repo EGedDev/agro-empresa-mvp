@@ -25,6 +25,10 @@ public class IdempotencyFilter extends OncePerRequestFilter {
     private static final Pattern COMPRAS = Pattern.compile("^/api/v1/compras/?$");
     private static final Pattern PAGO_VENTA = Pattern.compile("^/api/v1/ventas/\\d+/pagos/?$");
     private static final Pattern PAGO_COMPRA = Pattern.compile("^/api/v1/compras/\\d+/pagos/?$");
+    private static final Pattern ANULAR_PAGO_VENTA = Pattern.compile("^/api/v1/ventas/\\d+/pagos/\\d+/anular/?$");
+    private static final Pattern ANULAR_PAGO_COMPRA = Pattern.compile("^/api/v1/compras/\\d+/pagos/\\d+/anular/?$");
+    private static final Pattern DEVOLUCION_VENTA = Pattern.compile("^/api/v1/ventas/\\d+/devoluciones/?$");
+    private static final Pattern DEVOLUCION_COMPRA = Pattern.compile("^/api/v1/compras/\\d+/devoluciones/?$");
     private static final Pattern INVENTARIO = Pattern.compile("^/api/v1/inventario/movimientos/?$");
     private static final Pattern CIERRE_CAJA = Pattern.compile("^/api/v1/finanzas/caja/cierres/?$");
 
@@ -109,6 +113,10 @@ public class IdempotencyFilter extends OncePerRequestFilter {
                 || COMPRAS.matcher(ruta).matches()
                 || PAGO_VENTA.matcher(ruta).matches()
                 || PAGO_COMPRA.matcher(ruta).matches()
+                || ANULAR_PAGO_VENTA.matcher(ruta).matches()
+                || ANULAR_PAGO_COMPRA.matcher(ruta).matches()
+                || DEVOLUCION_VENTA.matcher(ruta).matches()
+                || DEVOLUCION_COMPRA.matcher(ruta).matches()
                 || INVENTARIO.matcher(ruta).matches()
                 || CIERRE_CAJA.matcher(ruta).matches();
     }

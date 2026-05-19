@@ -252,6 +252,212 @@ class MovimientosCajaIntegrationTest {
     }
 
     @Test
+    void anularPagoVentaRegistraMovimientoInversoYRecalculaSaldo() throws Exception {
+        String token = obtenerTokenAdmin();
+        Long categoriaId = crearCategoria(token, "Caja Anulacion Venta");
+        Long productoId = crearProducto(token, categoriaId, "Producto Anulacion Venta", new BigDecimal("10.00"), 10, 2);
+        Long clienteId = crearCliente(token, "Cliente AV");
+        Long ventaId = postJson(
+                "/api/v1/ventas",
+                Map.of(
+                        "clienteId", clienteId,
+                        "detalles", List.of(Map.of(
+                                "productoId", productoId,
+                                "cantidad", 3
+                        ))
+                ),
+                token
+        ).path("id").asLong();
+
+        Long pagoId = postJson(
+                "/api/v1/ventas/" + ventaId + "/pagos",
+                Map.of(
+                        "monto", new BigDecimal("15.00"),
+                        "metodoPago", "EFECTIVO",
+                        "referencia", "Pago venta a anular"
+                ),
+                token
+        ).path("id").asLong();
+
+        String idempotencyKey = "anular-pago-venta-" + UUID.randomUUID();
+        Map<String, Object> request = Map.of("motivo", "Error operativo confirmado");
+
+        JsonNode anulacion = postJsonOkConKey(
+                "/api/v1/ventas/" + ventaId + "/pagos/" + pagoId + "/anular",
+                request,
+                token,
+                idempotencyKey
+        );
+        postJsonOkConKey(
+                "/api/v1/ventas/" + ventaId + "/pagos/" + pagoId + "/anular",
+                request,
+                token,
+                idempotencyKey
+        );
+
+        assertThat(anulacion.path("anulado").asBoolean()).isTrue();
+        assertThat(anulacion.path("motivoAnulacion").asText()).isEqualTo("Error operativo confirmado");
+        assertThat(anulacion.path("fechaAnulacion").asText()).isNotBlank();
+
+        ventaRepository.findById(ventaId).ifPresentOrElse(
+                venta -> {
+                    assertThat(venta.getTotalPagado()).isEqualByComparingTo("0.00");
+                    assertThat(venta.getSaldoPendiente()).isEqualByComparingTo("30.00");
+                    assertThat(venta.getEstadoPago().name()).isEqualTo("PENDIENTE");
+                },
+                () -> {
+                    throw new AssertionError("No se encontro la venta anulada");
+                }
+        );
+
+        JsonNode movimientos = getJson("/api/v1/finanzas/caja/movimientos?sort=fechaMovimiento,asc", token);
+        assertThat(movimientos.path("totalElementos").asLong()).isEqualTo(2L);
+
+        JsonNode ingresoOriginal = movimientos.path("contenido").get(0);
+        assertThat(ingresoOriginal.path("tipo").asText()).isEqualTo("INGRESO");
+        assertThat(ingresoOriginal.path("referenciaTipo").asText()).isEqualTo("PAGO_VENTA");
+        assertThat(ingresoOriginal.path("monto").decimalValue()).isEqualByComparingTo("15.00");
+
+        JsonNode reverso = movimientos.path("contenido").get(1);
+        assertThat(reverso.path("tipo").asText()).isEqualTo("EGRESO");
+        assertThat(reverso.path("referenciaTipo").asText()).isEqualTo("REVERSO_PAGO_VENTA");
+        assertThat(reverso.path("referenciaId").asLong()).isEqualTo(pagoId);
+        assertThat(reverso.path("monto").decimalValue()).isEqualByComparingTo("15.00");
+
+        LocalDate hoy = LocalDate.now();
+        JsonNode resumenFinanciero = getJson("/api/v1/reportes/finanzas/resumen?desde=" + hoy + "&hasta=" + hoy, token);
+        assertThat(resumenFinanciero.path("cobrosRecibidos").decimalValue()).isEqualByComparingTo("0.00");
+    }
+
+    @Test
+    void anularPagoCompraRegistraMovimientoInversoYRecalculaSaldo() throws Exception {
+        String token = obtenerTokenAdmin();
+        Long categoriaId = crearCategoria(token, "Caja Anulacion Compra");
+        Long productoId = crearProducto(token, categoriaId, "Producto Anulacion Compra", new BigDecimal("10.00"), 10, 2);
+        Long proveedorId = crearProveedor(token, "Proveedor AC");
+        Long compraId = postJson(
+                "/api/v1/compras",
+                Map.of(
+                        "proveedorId", proveedorId,
+                        "detalles", List.of(Map.of(
+                                "productoId", productoId,
+                                "cantidad", 2,
+                                "costoUnitario", new BigDecimal("6.00")
+                        ))
+                ),
+                token
+        ).path("id").asLong();
+
+        Long pagoId = postJson(
+                "/api/v1/compras/" + compraId + "/pagos",
+                Map.of(
+                        "monto", new BigDecimal("12.00"),
+                        "metodoPago", "TRANSFERENCIA",
+                        "referencia", "Pago compra a anular"
+                ),
+                token
+        ).path("id").asLong();
+
+        JsonNode anulacion = postJsonOkConKey(
+                "/api/v1/compras/" + compraId + "/pagos/" + pagoId + "/anular",
+                Map.of("motivo", "Factura rectificada por proveedor"),
+                token,
+                "anular-pago-compra-" + UUID.randomUUID()
+        );
+
+        assertThat(anulacion.path("anulado").asBoolean()).isTrue();
+        assertThat(anulacion.path("motivoAnulacion").asText()).isEqualTo("Factura rectificada por proveedor");
+
+        compraRepository.findById(compraId).ifPresentOrElse(
+                compra -> {
+                    assertThat(compra.getTotalPagado()).isEqualByComparingTo("0.00");
+                    assertThat(compra.getSaldoPendiente()).isEqualByComparingTo("12.00");
+                    assertThat(compra.getEstadoPago().name()).isEqualTo("PENDIENTE");
+                },
+                () -> {
+                    throw new AssertionError("No se encontro la compra anulada");
+                }
+        );
+
+        JsonNode movimientos = getJson("/api/v1/finanzas/caja/movimientos?sort=fechaMovimiento,asc", token);
+        assertThat(movimientos.path("totalElementos").asLong()).isEqualTo(2L);
+
+        JsonNode egresoOriginal = movimientos.path("contenido").get(0);
+        assertThat(egresoOriginal.path("tipo").asText()).isEqualTo("EGRESO");
+        assertThat(egresoOriginal.path("referenciaTipo").asText()).isEqualTo("PAGO_COMPRA");
+        assertThat(egresoOriginal.path("monto").decimalValue()).isEqualByComparingTo("12.00");
+
+        JsonNode reverso = movimientos.path("contenido").get(1);
+        assertThat(reverso.path("tipo").asText()).isEqualTo("INGRESO");
+        assertThat(reverso.path("referenciaTipo").asText()).isEqualTo("REVERSO_PAGO_COMPRA");
+        assertThat(reverso.path("referenciaId").asLong()).isEqualTo(pagoId);
+        assertThat(reverso.path("monto").decimalValue()).isEqualByComparingTo("12.00");
+
+        LocalDate hoy = LocalDate.now();
+        JsonNode resumenFinanciero = getJson("/api/v1/reportes/finanzas/resumen?desde=" + hoy + "&hasta=" + hoy, token);
+        assertThat(resumenFinanciero.path("pagosRealizados").decimalValue()).isEqualByComparingTo("0.00");
+    }
+
+    @Test
+    void anularPagoEnPeriodoCajaCerradoEsRechazadoSinModificarElPago() throws Exception {
+        String token = obtenerTokenAdmin();
+        Long categoriaId = crearCategoria(token, "Caja Cerrada Anulacion");
+        Long productoId = crearProducto(token, categoriaId, "Producto Caja Cerrada", new BigDecimal("10.00"), 10, 2);
+        Long clienteId = crearCliente(token, "Cliente Caja Cerrada");
+        Long ventaId = postJson(
+                "/api/v1/ventas",
+                Map.of(
+                        "clienteId", clienteId,
+                        "detalles", List.of(Map.of(
+                                "productoId", productoId,
+                                "cantidad", 2
+                        ))
+                ),
+                token
+        ).path("id").asLong();
+
+        Long pagoId = postJson(
+                "/api/v1/ventas/" + ventaId + "/pagos",
+                Map.of(
+                        "monto", new BigDecimal("10.00"),
+                        "metodoPago", "EFECTIVO",
+                        "referencia", "Pago antes de cierre"
+                ),
+                token
+        ).path("id").asLong();
+
+        LocalDate hoy = LocalDate.now();
+        postJson(
+                "/api/v1/finanzas/caja/cierres",
+                Map.of(
+                        "desde", hoy.toString(),
+                        "hasta", hoy.toString(),
+                        "saldoReportado", new BigDecimal("10.00")
+                ),
+                token
+        );
+
+        mockMvc.perform(post("/api/v1/ventas/" + ventaId + "/pagos/" + pagoId + "/anular")
+                        .header("Authorization", bearer(token))
+                        .header("Idempotency-Key", "anular-pago-caja-cerrada-" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("motivo", "Intento fuera de periodo abierto"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"))
+                .andExpect(jsonPath("$.message").value(
+                        "No se pueden registrar movimientos en un periodo de caja cerrado"
+                ));
+
+        pagoVentaRepository.findById(pagoId).ifPresentOrElse(
+                pago -> assertThat(pago.isAnulado()).isFalse(),
+                () -> {
+                    throw new AssertionError("No se encontro el pago original");
+                }
+        );
+        assertThat(movimientoCajaRepository.count()).isEqualTo(1L);
+    }
+
+    @Test
     void usuarioVentasNoPuedeConsultarMovimientosDeCaja() throws Exception {
         String adminToken = obtenerTokenAdmin();
         crearUsuario(adminToken, "ventas.caja", "Usuario Ventas Caja", "VENTAS");
@@ -404,6 +610,21 @@ class MovimientosCajaIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(body)))
                 .andExpect(status().isCreated())
+                .andReturn());
+    }
+
+    private JsonNode postJsonOkConKey(
+            String url,
+            Object body,
+            String token,
+            String idempotencyKey
+    ) throws Exception {
+        return jsonNode(mockMvc.perform(post(url)
+                        .header("Authorization", bearer(token))
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(body)))
+                .andExpect(status().isOk())
                 .andReturn());
     }
 

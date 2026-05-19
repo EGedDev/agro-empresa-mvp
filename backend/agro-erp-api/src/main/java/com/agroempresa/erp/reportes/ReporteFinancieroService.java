@@ -1,9 +1,11 @@
 package com.agroempresa.erp.reportes;
 
 import com.agroempresa.erp.comercial.compra.CompraRepository;
+import com.agroempresa.erp.comercial.compra.devolucion.DevolucionCompraRepository;
 import com.agroempresa.erp.comercial.compra.EstadoCompra;
 import com.agroempresa.erp.comercial.venta.EstadoVenta;
 import com.agroempresa.erp.comercial.venta.VentaRepository;
+import com.agroempresa.erp.comercial.venta.devolucion.DevolucionVentaRepository;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.finanzas.pago.compra.PagoCompraRepository;
 import com.agroempresa.erp.finanzas.pago.venta.PagoVentaRepository;
@@ -26,17 +28,23 @@ public class ReporteFinancieroService {
     private final CompraRepository compraRepository;
     private final PagoVentaRepository pagoVentaRepository;
     private final PagoCompraRepository pagoCompraRepository;
+    private final DevolucionVentaRepository devolucionVentaRepository;
+    private final DevolucionCompraRepository devolucionCompraRepository;
 
     public ReporteFinancieroService(
             VentaRepository ventaRepository,
             CompraRepository compraRepository,
             PagoVentaRepository pagoVentaRepository,
-            PagoCompraRepository pagoCompraRepository
+            PagoCompraRepository pagoCompraRepository,
+            DevolucionVentaRepository devolucionVentaRepository,
+            DevolucionCompraRepository devolucionCompraRepository
     ) {
         this.ventaRepository = ventaRepository;
         this.compraRepository = compraRepository;
         this.pagoVentaRepository = pagoVentaRepository;
         this.pagoCompraRepository = pagoCompraRepository;
+        this.devolucionVentaRepository = devolucionVentaRepository;
+        this.devolucionCompraRepository = devolucionCompraRepository;
     }
 
     @Transactional(readOnly = true)
@@ -60,12 +68,16 @@ public class ReporteFinancieroService {
 
         BigDecimal cobrosRecibidos = monto(pagoVentaRepository.sumarMontoPorPeriodo(inicio, finExclusivo));
         BigDecimal pagosRealizados = monto(pagoCompraRepository.sumarMontoPorPeriodo(inicio, finExclusivo));
+        BigDecimal devolucionesVenta = monto(devolucionVentaRepository.sumarTotalPorPeriodo(inicio, finExclusivo));
+        BigDecimal devolucionesCompra = monto(devolucionCompraRepository.sumarTotalPorPeriodo(inicio, finExclusivo));
 
         return new ResumenFinancieroResponse(
                 desde,
                 hasta,
                 ventas,
                 compras,
+                devolucionesVenta,
+                devolucionesCompra,
                 cobrosRecibidos,
                 pagosRealizados,
                 cobrosRecibidos.subtract(pagosRealizados).setScale(ESCALA_MONETARIA, RoundingMode.UNNECESSARY),

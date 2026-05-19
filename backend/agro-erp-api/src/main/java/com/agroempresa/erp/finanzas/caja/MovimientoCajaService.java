@@ -31,6 +31,9 @@ public class MovimientoCajaService {
 
     private static final String REFERENCIA_PAGO_VENTA = "PAGO_VENTA";
     private static final String REFERENCIA_PAGO_COMPRA = "PAGO_COMPRA";
+    private static final String REFERENCIA_REVERSO_PAGO_VENTA = "REVERSO_PAGO_VENTA";
+    private static final String REFERENCIA_REVERSO_PAGO_COMPRA = "REVERSO_PAGO_COMPRA";
+    private static final int LONGITUD_MAXIMA_REFERENCIA = 120;
 
     private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
             "id", "id",
@@ -170,6 +173,32 @@ public class MovimientoCajaService {
         );
     }
 
+    @Transactional
+    public MovimientoCaja registrarReversoIngresoPorPagoVenta(PagoVenta pagoVenta) {
+        return registrarMovimiento(
+                TipoMovimientoCaja.EGRESO,
+                pagoVenta.getMonto(),
+                pagoVenta.getMetodoPago(),
+                referenciaAnulacion(pagoVenta.getReferencia()),
+                REFERENCIA_REVERSO_PAGO_VENTA,
+                pagoVenta.getId(),
+                LocalDateTime.now()
+        );
+    }
+
+    @Transactional
+    public MovimientoCaja registrarReversoEgresoPorPagoCompra(PagoCompra pagoCompra) {
+        return registrarMovimiento(
+                TipoMovimientoCaja.INGRESO,
+                pagoCompra.getMonto(),
+                pagoCompra.getMetodoPago(),
+                referenciaAnulacion(pagoCompra.getReferencia()),
+                REFERENCIA_REVERSO_PAGO_COMPRA,
+                pagoCompra.getId(),
+                LocalDateTime.now()
+        );
+    }
+
     private MovimientoCaja registrarMovimiento(
             TipoMovimientoCaja tipo,
             BigDecimal monto,
@@ -222,6 +251,18 @@ public class MovimientoCajaService {
 
     private BigDecimal saldoNeto(BigDecimal ingresos, BigDecimal egresos) {
         return ingresos.subtract(egresos).setScale(ESCALA_MONETARIA, RoundingMode.UNNECESSARY);
+    }
+
+    private String referenciaAnulacion(String referenciaOriginal) {
+        String referencia = referenciaOriginal == null || referenciaOriginal.isBlank()
+                ? "Anulacion de pago"
+                : "Anulacion: " + referenciaOriginal.trim();
+
+        if (referencia.length() <= LONGITUD_MAXIMA_REFERENCIA) {
+            return referencia;
+        }
+
+        return referencia.substring(0, LONGITUD_MAXIMA_REFERENCIA);
     }
 
     private void validarRangoFechas(LocalDate desde, LocalDate hasta) {

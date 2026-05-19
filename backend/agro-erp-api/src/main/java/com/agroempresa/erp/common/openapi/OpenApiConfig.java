@@ -30,6 +30,10 @@ public class OpenApiConfig {
             "/api/v1/compras",
             "/api/v1/ventas/{ventaId}/pagos",
             "/api/v1/compras/{compraId}/pagos",
+            "/api/v1/ventas/{ventaId}/pagos/{pagoId}/anular",
+            "/api/v1/compras/{compraId}/pagos/{pagoId}/anular",
+            "/api/v1/ventas/{ventaId}/devoluciones",
+            "/api/v1/compras/{compraId}/devoluciones",
             "/api/v1/inventario/movimientos",
             "/api/v1/finanzas/caja/cierres"
     );

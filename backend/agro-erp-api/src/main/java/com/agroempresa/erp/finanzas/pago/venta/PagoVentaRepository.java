@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface PagoVentaRepository extends JpaRepository<PagoVenta, Long> {
 
@@ -33,9 +34,22 @@ public interface PagoVentaRepository extends JpaRepository<PagoVenta, Long> {
             FROM PagoVenta p
             WHERE p.fechaPago >= :desde
               AND p.fechaPago < :hastaExclusivo
+              AND p.anulado = false
             """)
     BigDecimal sumarMontoPorPeriodo(
             @Param("desde") LocalDateTime desde,
             @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT p
+            FROM PagoVenta p
+            JOIN FETCH p.venta
+            WHERE p.id = :pagoId
+              AND p.venta.id = :ventaId
+            """)
+    Optional<PagoVenta> findByIdYVentaId(
+            @Param("pagoId") Long pagoId,
+            @Param("ventaId") Long ventaId
     );
 }

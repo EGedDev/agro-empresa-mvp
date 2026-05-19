@@ -9,6 +9,8 @@ public record ResumenFinancieroResponse(
         LocalDate hasta,
         ResumenOperacionesFinancieras ventas,
         ResumenOperacionesFinancieras compras,
+        BigDecimal devolucionesVenta,
+        BigDecimal devolucionesCompra,
         BigDecimal cobrosRecibidos,
         BigDecimal pagosRealizados,
         BigDecimal flujoCajaNeto,

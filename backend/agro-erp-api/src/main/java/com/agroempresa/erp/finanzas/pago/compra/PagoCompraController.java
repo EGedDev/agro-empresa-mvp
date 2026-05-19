@@ -2,6 +2,7 @@ package com.agroempresa.erp.finanzas.pago.compra;
 
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.finanzas.MetodoPago;
+import com.agroempresa.erp.finanzas.pago.compra.dto.AnularPagoCompraRequest;
 import com.agroempresa.erp.finanzas.pago.compra.dto.PagoCompraResponse;
 import com.agroempresa.erp.finanzas.pago.compra.dto.RegistrarPagoCompraRequest;
 import jakarta.validation.Valid;
@@ -44,5 +45,14 @@ public class PagoCompraController {
             @Valid @RequestBody RegistrarPagoCompraRequest request
     ) {
         return pagoCompraService.registrar(compraId, request);
+    }
+
+    @PostMapping("/{pagoId}/anular")
+    public PagoCompraResponse anular(
+            @PathVariable @Positive(message = "El id de la compra debe ser mayor a cero") Long compraId,
+            @PathVariable @Positive(message = "El id del pago debe ser mayor a cero") Long pagoId,
+            @Valid @RequestBody AnularPagoCompraRequest request
+    ) {
+        return pagoCompraService.anular(compraId, pagoId, request);
     }
 }

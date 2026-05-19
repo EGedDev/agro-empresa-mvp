@@ -127,6 +127,26 @@ public class InventarioService {
     }
 
     @Transactional
+    public void registrarEntradaPorDevolucionVenta(
+            Producto producto,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            Long devolucionVentaId
+    ) {
+        registrarMovimiento(
+                producto,
+                TipoMovimientoInventario.ENTRADA_POR_DEVOLUCION_VENTA,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                "Entrada de inventario por devolucion de venta",
+                "DEVOLUCION_VENTA",
+                devolucionVentaId
+        );
+    }
+
+    @Transactional
     public void registrarEntradaPorCompra(
             Producto producto,
             Integer cantidad,
@@ -163,6 +183,26 @@ public class InventarioService {
                 "Salida de inventario por cancelación de compra",
                 "COMPRA",
                 compraId
+        );
+    }
+
+    @Transactional
+    public void registrarSalidaPorDevolucionCompra(
+            Producto producto,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            Long devolucionCompraId
+    ) {
+        registrarMovimiento(
+                producto,
+                TipoMovimientoInventario.SALIDA_POR_DEVOLUCION_COMPRA,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                "Salida de inventario por devolucion de compra",
+                "DEVOLUCION_COMPRA",
+                devolucionCompraId
         );
     }
 

@@ -2,6 +2,7 @@ package com.agroempresa.erp.finanzas.pago.venta;
 
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.finanzas.MetodoPago;
+import com.agroempresa.erp.finanzas.pago.venta.dto.AnularPagoVentaRequest;
 import com.agroempresa.erp.finanzas.pago.venta.dto.PagoVentaResponse;
 import com.agroempresa.erp.finanzas.pago.venta.dto.RegistrarPagoVentaRequest;
 import jakarta.validation.Valid;
@@ -44,5 +45,14 @@ public class PagoVentaController {
             @Valid @RequestBody RegistrarPagoVentaRequest request
     ) {
         return pagoVentaService.registrar(ventaId, request);
+    }
+
+    @PostMapping("/{pagoId}/anular")
+    public PagoVentaResponse anular(
+            @PathVariable @Positive(message = "El id de la venta debe ser mayor a cero") Long ventaId,
+            @PathVariable @Positive(message = "El id del pago debe ser mayor a cero") Long pagoId,
+            @Valid @RequestBody AnularPagoVentaRequest request
+    ) {
+        return pagoVentaService.anular(ventaId, pagoId, request);
     }
 }

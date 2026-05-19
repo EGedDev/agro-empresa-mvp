@@ -108,6 +108,47 @@ public class Compra {
         actualizarEstadoPago();
     }
 
+    public void anularPago(BigDecimal monto) {
+        if (this.estado == EstadoCompra.CANCELADA) {
+            throw new IllegalStateException("No se puede anular pagos de una compra cancelada");
+        }
+
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto del pago debe ser mayor a cero");
+        }
+
+        if (monto.compareTo(this.totalPagado) > 0) {
+            throw new IllegalArgumentException("El pago a anular no puede superar el total pagado");
+        }
+
+        this.totalPagado = this.totalPagado.subtract(monto);
+        actualizarEstadoPago();
+    }
+
+    public void registrarDevolucion(BigDecimal monto) {
+        if (this.estado == EstadoCompra.CANCELADA) {
+            throw new IllegalStateException("No se puede registrar devoluciones para una compra cancelada");
+        }
+
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto de la devolucion debe ser mayor a cero");
+        }
+
+        if (monto.compareTo(this.total) > 0) {
+            throw new IllegalArgumentException("La devolucion no puede superar el total de la compra");
+        }
+
+        BigDecimal nuevoTotal = this.total.subtract(monto);
+        if (this.totalPagado.compareTo(nuevoTotal) > 0) {
+            throw new IllegalStateException(
+                    "No se puede registrar la devolucion porque existen pagos por encima del nuevo total"
+            );
+        }
+
+        this.total = nuevoTotal;
+        actualizarEstadoPago();
+    }
+
     public void cancelar() {
         if (this.totalPagado.compareTo(BigDecimal.ZERO) > 0) {
             throw new IllegalStateException("No se puede cancelar una compra con pagos registrados");

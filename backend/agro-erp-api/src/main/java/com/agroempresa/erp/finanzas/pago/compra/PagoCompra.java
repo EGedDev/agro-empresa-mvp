@@ -38,6 +38,14 @@ public class PagoCompra {
     @Column(nullable = false, updatable = false)
     private LocalDateTime creadoEn;
 
+    @Column(nullable = false)
+    private boolean anulado;
+
+    private LocalDateTime fechaAnulacion;
+
+    @Column(length = 300)
+    private String motivoAnulacion;
+
     protected PagoCompra() {
     }
 
@@ -52,6 +60,7 @@ public class PagoCompra {
         this.metodoPago = metodoPago;
         this.referencia = referencia;
         this.fechaPago = LocalDateTime.now();
+        this.anulado = false;
     }
 
     @PrePersist
@@ -85,5 +94,31 @@ public class PagoCompra {
 
     public LocalDateTime getCreadoEn() {
         return creadoEn;
+    }
+
+    public boolean isAnulado() {
+        return anulado;
+    }
+
+    public LocalDateTime getFechaAnulacion() {
+        return fechaAnulacion;
+    }
+
+    public String getMotivoAnulacion() {
+        return motivoAnulacion;
+    }
+
+    public void anular(String motivo) {
+        if (this.anulado) {
+            throw new IllegalStateException("El pago ya fue anulado");
+        }
+
+        if (motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException("El motivo de anulacion es obligatorio");
+        }
+
+        this.anulado = true;
+        this.fechaAnulacion = LocalDateTime.now();
+        this.motivoAnulacion = motivo.trim();
     }
 }

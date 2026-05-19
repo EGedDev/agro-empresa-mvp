@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface PagoCompraRepository extends JpaRepository<PagoCompra, Long> {
 
@@ -33,9 +34,22 @@ public interface PagoCompraRepository extends JpaRepository<PagoCompra, Long> {
             FROM PagoCompra p
             WHERE p.fechaPago >= :desde
               AND p.fechaPago < :hastaExclusivo
+              AND p.anulado = false
             """)
     BigDecimal sumarMontoPorPeriodo(
             @Param("desde") LocalDateTime desde,
             @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT p
+            FROM PagoCompra p
+            JOIN FETCH p.compra
+            WHERE p.id = :pagoId
+              AND p.compra.id = :compraId
+            """)
+    Optional<PagoCompra> findByIdYCompraId(
+            @Param("pagoId") Long pagoId,
+            @Param("compraId") Long compraId
     );
 }
