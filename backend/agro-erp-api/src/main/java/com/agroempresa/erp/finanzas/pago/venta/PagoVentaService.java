@@ -6,6 +6,8 @@ import com.agroempresa.erp.comercial.venta.VentaRepository;
 import com.agroempresa.erp.auditoria.AuditoriaService;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeracionService;
+import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.finanzas.MetodoPago;
@@ -27,6 +29,7 @@ public class PagoVentaService {
 
     private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
             "id", "id",
+            "numero", "numero",
             "fechaPago", "fechaPago",
             "monto", "monto",
             "metodoPago", "metodoPago",
@@ -39,17 +42,20 @@ public class PagoVentaService {
     private final VentaRepository ventaRepository;
     private final AuditoriaService auditoriaService;
     private final MovimientoCajaService movimientoCajaService;
+    private final NumeracionService numeracionService;
 
     public PagoVentaService(
             PagoVentaRepository pagoVentaRepository,
             VentaRepository ventaRepository,
             AuditoriaService auditoriaService,
-            MovimientoCajaService movimientoCajaService
+            MovimientoCajaService movimientoCajaService,
+            NumeracionService numeracionService
     ) {
         this.pagoVentaRepository = pagoVentaRepository;
         this.ventaRepository = ventaRepository;
         this.auditoriaService = auditoriaService;
         this.movimientoCajaService = movimientoCajaService;
+        this.numeracionService = numeracionService;
     }
 
     @Transactional(readOnly = true)
@@ -113,6 +119,7 @@ public class PagoVentaService {
                 request.metodoPago(),
                 normalizar(request.referencia())
         );
+        pagoVenta.asignarNumero(numeracionService.generar(TipoDocumento.PAGO_VENTA));
 
         PagoVenta pagoGuardado = pagoVentaRepository.save(pagoVenta);
 

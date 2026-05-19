@@ -21,6 +21,9 @@ public class Compra {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String numero;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "proveedor_id", nullable = false)
     private Proveedor proveedor;
@@ -188,6 +191,18 @@ public class Compra {
 
     public Long getId() {
         return id;
+    }
+
+    public String getNumero() {
+        return numero;
+    }
+
+    public void asignarNumero(String numero) {
+        if (this.numero != null) {
+            throw new IllegalStateException("La compra ya tiene numero asignado");
+        }
+
+        this.numero = numero;
     }
 
     public Proveedor getProveedor() {

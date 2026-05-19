@@ -10,6 +10,8 @@ import com.agroempresa.erp.comercial.venta.dto.VentaDetalleRequest;
 import com.agroempresa.erp.comercial.venta.dto.VentaRequest;
 import com.agroempresa.erp.comercial.venta.dto.VentaResponse;
 import com.agroempresa.erp.common.error.BusinessException;
+import com.agroempresa.erp.common.numeracion.NumeracionService;
+import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.finanzas.EstadoPago;
 import com.agroempresa.erp.inventario.InventarioService;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,9 @@ class VentaServiceTest {
     @Mock
     private AuditoriaService auditoriaService;
 
+    @Mock
+    private NumeracionService numeracionService;
+
     @InjectMocks
     private VentaService ventaService;
 
@@ -66,6 +71,7 @@ class VentaServiceTest {
         );
 
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(numeracionService.generar(TipoDocumento.VENTA)).thenReturn("V-000001");
         when(productoRepository.findByIdParaActualizar(2L)).thenReturn(Optional.of(producto));
         when(ventaRepository.save(any(Venta.class))).thenAnswer(invocation -> {
             Venta venta = invocation.getArgument(0);
@@ -76,6 +82,7 @@ class VentaServiceTest {
         VentaResponse response = ventaService.crear(request);
 
         assertThat(producto.getStockActual()).isEqualTo(5);
+        assertThat(response.numero()).isEqualTo("V-000001");
         assertThat(response.detalles()).hasSize(1);
         assertThat(response.detalles().getFirst().productoId()).isEqualTo(2L);
         assertThat(response.detalles().getFirst().cantidad()).isEqualTo(5);

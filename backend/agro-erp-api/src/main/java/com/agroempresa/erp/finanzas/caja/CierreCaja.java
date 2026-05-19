@@ -30,6 +30,9 @@ public class CierreCaja {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String numero;
+
     @Column(nullable = false)
     private LocalDate fechaDesde;
 
@@ -105,6 +108,18 @@ public class CierreCaja {
 
     public Long getId() {
         return id;
+    }
+
+    public String getNumero() {
+        return numero;
+    }
+
+    public void asignarNumero(String numero) {
+        if (this.numero != null) {
+            throw new IllegalStateException("El cierre de caja ya tiene numero asignado");
+        }
+
+        this.numero = numero;
     }
 
     public LocalDate getFechaDesde() {

@@ -3,6 +3,8 @@ package com.agroempresa.erp.finanzas.caja;
 import com.agroempresa.erp.auditoria.AuditoriaService;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeracionService;
+import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.finanzas.MetodoPago;
@@ -38,6 +40,7 @@ public class CierreCajaService {
 
     private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
             "id", "id",
+            "numero", "numero",
             "desde", "fechaDesde",
             "hasta", "fechaHasta",
             "saldoCalculado", "saldoCalculado",
@@ -51,15 +54,18 @@ public class CierreCajaService {
     private final CierreCajaRepository cierreCajaRepository;
     private final MovimientoCajaRepository movimientoCajaRepository;
     private final AuditoriaService auditoriaService;
+    private final NumeracionService numeracionService;
 
     public CierreCajaService(
             CierreCajaRepository cierreCajaRepository,
             MovimientoCajaRepository movimientoCajaRepository,
-            AuditoriaService auditoriaService
+            AuditoriaService auditoriaService,
+            NumeracionService numeracionService
     ) {
         this.cierreCajaRepository = cierreCajaRepository;
         this.movimientoCajaRepository = movimientoCajaRepository;
         this.auditoriaService = auditoriaService;
+        this.numeracionService = numeracionService;
     }
 
     @Transactional(readOnly = true)
@@ -142,6 +148,7 @@ public class CierreCajaService {
                 normalizarObservaciones(request.observaciones()),
                 obtenerUsernameActual()
         );
+        cierreCaja.asignarNumero(numeracionService.generar(TipoDocumento.CIERRE_CAJA));
         agregarDetallePorMetodo(cierreCaja, resumen, saldosReportadosPorMetodo);
 
         CierreCaja cierreGuardado = guardar(cierreCaja);

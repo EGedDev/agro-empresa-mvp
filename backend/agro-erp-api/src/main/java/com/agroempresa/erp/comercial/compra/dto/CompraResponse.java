@@ -11,6 +11,7 @@ import java.util.List;
 
 public record CompraResponse(
         Long id,
+        String numero,
         Long proveedorId,
         String proveedorNombre,
         LocalDateTime fechaCompra,
@@ -28,6 +29,7 @@ public record CompraResponse(
     public static CompraResponse desdeEntidad(Compra compra) {
         return new CompraResponse(
                 compra.getId(),
+                compra.getNumero(),
                 compra.getProveedor().getId(),
                 compra.getProveedor().getNombre(),
                 compra.getFechaCompra(),

@@ -10,6 +10,8 @@ import com.agroempresa.erp.comercial.venta.dto.VentaRequest;
 import com.agroempresa.erp.comercial.venta.dto.VentaResponse;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeracionService;
+import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.finanzas.EstadoPago;
@@ -28,17 +30,18 @@ import java.util.Map;
 @Service
 public class VentaService {
 
-    private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
-            "id", "id",
-            "fechaVenta", "fechaVenta",
-            "fechaVencimiento", "fechaVencimiento",
-            "total", "total",
-            "totalPagado", "totalPagado",
-            "saldoPendiente", "saldoPendiente",
-            "estado", "estado",
-            "estadoPago", "estadoPago",
-            "creadoEn", "creadoEn",
-            "actualizadoEn", "actualizadoEn"
+    private static final Map<String, String> CAMPOS_ORDENABLES = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("numero", "numero"),
+            Map.entry("fechaVenta", "fechaVenta"),
+            Map.entry("fechaVencimiento", "fechaVencimiento"),
+            Map.entry("total", "total"),
+            Map.entry("totalPagado", "totalPagado"),
+            Map.entry("saldoPendiente", "saldoPendiente"),
+            Map.entry("estado", "estado"),
+            Map.entry("estadoPago", "estadoPago"),
+            Map.entry("creadoEn", "creadoEn"),
+            Map.entry("actualizadoEn", "actualizadoEn")
     );
 
     private static final Sort ORDEN_DEFAULT = Sort.by(Sort.Direction.DESC, "fechaVenta");
@@ -48,19 +51,22 @@ public class VentaService {
     private final ProductoRepository productoRepository;
     private final InventarioService inventarioService;
     private final AuditoriaService auditoriaService;
+    private final NumeracionService numeracionService;
 
     public VentaService(
             VentaRepository ventaRepository,
             ClienteRepository clienteRepository,
             ProductoRepository productoRepository,
             InventarioService inventarioService,
-            AuditoriaService auditoriaService
+            AuditoriaService auditoriaService,
+            NumeracionService numeracionService
     ) {
         this.ventaRepository = ventaRepository;
         this.clienteRepository = clienteRepository;
         this.productoRepository = productoRepository;
         this.inventarioService = inventarioService;
         this.auditoriaService = auditoriaService;
+        this.numeracionService = numeracionService;
     }
 
     @Transactional(readOnly = true)
@@ -136,6 +142,7 @@ public class VentaService {
         validarClienteActivo(cliente);
 
         Venta venta = new Venta(cliente, request.fechaVencimiento());
+        venta.asignarNumero(numeracionService.generar(TipoDocumento.VENTA));
 
         List<MovimientoInventarioPendiente> movimientosPendientes = new ArrayList<>();
         List<DetalleVentaValidado> detallesValidados = validarDetallesVenta(consolidarDetalles(request.detalles()));

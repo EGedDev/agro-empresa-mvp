@@ -12,6 +12,8 @@ import com.agroempresa.erp.comercial.venta.devolucion.dto.DevolucionVentaRespons
 import com.agroempresa.erp.comercial.venta.devolucion.dto.RegistrarDevolucionVentaRequest;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeracionService;
+import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.inventario.InventarioService;
@@ -31,6 +33,7 @@ public class DevolucionVentaService {
 
     private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
             "id", "id",
+            "numero", "numero",
             "fechaDevolucion", "fechaDevolucion",
             "total", "total",
             "creadoEn", "creadoEn"
@@ -43,19 +46,22 @@ public class DevolucionVentaService {
     private final ProductoRepository productoRepository;
     private final InventarioService inventarioService;
     private final AuditoriaService auditoriaService;
+    private final NumeracionService numeracionService;
 
     public DevolucionVentaService(
             DevolucionVentaRepository devolucionVentaRepository,
             VentaRepository ventaRepository,
             ProductoRepository productoRepository,
             InventarioService inventarioService,
-            AuditoriaService auditoriaService
+            AuditoriaService auditoriaService,
+            NumeracionService numeracionService
     ) {
         this.devolucionVentaRepository = devolucionVentaRepository;
         this.ventaRepository = ventaRepository;
         this.productoRepository = productoRepository;
         this.inventarioService = inventarioService;
         this.auditoriaService = auditoriaService;
+        this.numeracionService = numeracionService;
     }
 
     @Transactional(readOnly = true)
@@ -104,6 +110,7 @@ public class DevolucionVentaService {
         Map<Long, Producto> productos = buscarProductosParaActualizar(detallesValidados);
 
         DevolucionVenta devolucion = new DevolucionVenta(venta, normalizarMotivo(request.motivo()));
+        devolucion.asignarNumero(numeracionService.generar(TipoDocumento.DEVOLUCION_VENTA));
         List<MovimientoInventarioPendiente> movimientosPendientes = new ArrayList<>();
 
         for (DetalleDevolucionVentaValidado detalleValidado : detallesValidados) {

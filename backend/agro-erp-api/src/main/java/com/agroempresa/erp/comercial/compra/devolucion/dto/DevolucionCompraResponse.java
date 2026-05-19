@@ -8,6 +8,7 @@ import java.util.List;
 
 public record DevolucionCompraResponse(
         Long id,
+        String numero,
         Long compraId,
         LocalDateTime fechaDevolucion,
         String motivo,
@@ -19,6 +20,7 @@ public record DevolucionCompraResponse(
     public static DevolucionCompraResponse desdeEntidad(DevolucionCompra devolucion) {
         return new DevolucionCompraResponse(
                 devolucion.getId(),
+                devolucion.getNumero(),
                 devolucion.getCompra().getId(),
                 devolucion.getFechaDevolucion(),
                 devolucion.getMotivo(),

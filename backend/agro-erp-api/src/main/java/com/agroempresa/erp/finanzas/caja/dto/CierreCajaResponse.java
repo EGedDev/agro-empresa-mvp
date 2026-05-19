@@ -9,6 +9,7 @@ import java.util.List;
 
 public record CierreCajaResponse(
         Long id,
+        String numero,
         LocalDate desde,
         LocalDate hasta,
         long cantidadIngresos,
@@ -27,6 +28,7 @@ public record CierreCajaResponse(
     public static CierreCajaResponse desdeEntidad(CierreCaja cierreCaja) {
         return new CierreCajaResponse(
                 cierreCaja.getId(),
+                cierreCaja.getNumero(),
                 cierreCaja.getFechaDesde(),
                 cierreCaja.getFechaHasta(),
                 cierreCaja.getCantidadIngresos(),

@@ -11,6 +11,7 @@ import java.util.List;
 
 public record VentaResponse(
         Long id,
+        String numero,
         Long clienteId,
         String clienteNombre,
         LocalDateTime fechaVenta,
@@ -28,6 +29,7 @@ public record VentaResponse(
     public static VentaResponse desdeEntidad(Venta venta) {
         return new VentaResponse(
                 venta.getId(),
+                venta.getNumero(),
                 venta.getCliente().getId(),
                 venta.getCliente().getNombre(),
                 venta.getFechaVenta(),

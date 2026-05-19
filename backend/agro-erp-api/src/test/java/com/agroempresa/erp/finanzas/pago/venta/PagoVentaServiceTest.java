@@ -8,6 +8,8 @@ import com.agroempresa.erp.comercial.venta.EstadoVenta;
 import com.agroempresa.erp.comercial.venta.Venta;
 import com.agroempresa.erp.comercial.venta.VentaRepository;
 import com.agroempresa.erp.common.error.BusinessException;
+import com.agroempresa.erp.common.numeracion.NumeracionService;
+import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.finanzas.EstadoPago;
 import com.agroempresa.erp.finanzas.MetodoPago;
 import com.agroempresa.erp.finanzas.caja.MovimientoCajaService;
@@ -45,6 +47,9 @@ class PagoVentaServiceTest {
     @Mock
     private MovimientoCajaService movimientoCajaService;
 
+    @Mock
+    private NumeracionService numeracionService;
+
     @InjectMocks
     private PagoVentaService pagoVentaService;
 
@@ -58,6 +63,7 @@ class PagoVentaServiceTest {
         );
 
         when(ventaRepository.findByIdParaActualizar(1L)).thenReturn(Optional.of(venta));
+        when(numeracionService.generar(TipoDocumento.PAGO_VENTA)).thenReturn("PV-000001");
         when(pagoVentaRepository.save(any(PagoVenta.class))).thenAnswer(invocation -> {
             PagoVenta pagoVenta = invocation.getArgument(0);
             ReflectionTestUtils.setField(pagoVenta, "id", 30L);
@@ -67,6 +73,7 @@ class PagoVentaServiceTest {
         PagoVentaResponse response = pagoVentaService.registrar(1L, request);
 
         assertThat(response.id()).isEqualTo(30L);
+        assertThat(response.numero()).isEqualTo("PV-000001");
         assertThat(response.ventaId()).isEqualTo(1L);
         assertThat(response.monto()).isEqualByComparingTo("100.00");
         assertThat(venta.getTotalPagado()).isEqualByComparingTo("100.00");
@@ -85,6 +92,7 @@ class PagoVentaServiceTest {
         );
 
         when(ventaRepository.findByIdParaActualizar(1L)).thenReturn(Optional.of(venta));
+        when(numeracionService.generar(TipoDocumento.PAGO_VENTA)).thenReturn("PV-000002");
         when(pagoVentaRepository.save(any(PagoVenta.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         pagoVentaService.registrar(1L, request);

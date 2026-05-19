@@ -271,6 +271,22 @@ Las fechas usan formato ISO `YYYY-MM-DD`.
 En ventas y compras, `fechaVencimiento` es opcional. Si no se envia, la API usa el dia de
 registro como vencimiento para mantener compatibilidad con ventas/compras al contado.
 
+### Numeracion documental
+
+La API asigna un `numero` interno a los documentos operativos principales. Este numero es
+transaccional, legible y no depende del `id` tecnico de base de datos.
+
+- Ventas: `V-000001`
+- Compras: `C-000001`
+- Pagos de venta: `PV-000001`
+- Pagos de compra: `PC-000001`
+- Devoluciones de venta: `DV-000001`
+- Devoluciones de compra: `DC-000001`
+- Cierres de caja: `CC-000001`
+
+Los correlativos se generan con bloqueo transaccional para evitar duplicados cuando dos
+usuarios registran documentos al mismo tiempo.
+
 ### Anulaciones de pagos
 
 Los pagos no se eliminan fisicamente. Para corregir un pago se usa una anulacion con motivo

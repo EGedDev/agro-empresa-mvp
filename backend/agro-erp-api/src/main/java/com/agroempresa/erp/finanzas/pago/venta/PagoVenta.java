@@ -17,6 +17,9 @@ public class PagoVenta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String numero;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "venta_id", nullable = false)
     private Venta venta;
@@ -70,6 +73,18 @@ public class PagoVenta {
 
     public Long getId() {
         return id;
+    }
+
+    public String getNumero() {
+        return numero;
+    }
+
+    public void asignarNumero(String numero) {
+        if (this.numero != null) {
+            throw new IllegalStateException("El pago ya tiene numero asignado");
+        }
+
+        this.numero = numero;
     }
 
     public Venta getVenta() {

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 public record PagoVentaResponse(
         Long id,
+        String numero,
         Long ventaId,
         BigDecimal monto,
         MetodoPago metodoPago,
@@ -22,6 +23,7 @@ public record PagoVentaResponse(
     public static PagoVentaResponse desdeEntidad(PagoVenta pagoVenta) {
         return new PagoVentaResponse(
                 pagoVenta.getId(),
+                pagoVenta.getNumero(),
                 pagoVenta.getVenta().getId(),
                 pagoVenta.getMonto(),
                 pagoVenta.getMetodoPago(),

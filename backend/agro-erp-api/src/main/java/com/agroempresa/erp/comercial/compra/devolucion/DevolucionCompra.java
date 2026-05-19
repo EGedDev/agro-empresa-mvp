@@ -17,6 +17,9 @@ public class DevolucionCompra {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String numero;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "compra_id", nullable = false)
     private Compra compra;
@@ -66,6 +69,18 @@ public class DevolucionCompra {
 
     public Long getId() {
         return id;
+    }
+
+    public String getNumero() {
+        return numero;
+    }
+
+    public void asignarNumero(String numero) {
+        if (this.numero != null) {
+            throw new IllegalStateException("La devolucion ya tiene numero asignado");
+        }
+
+        this.numero = numero;
     }
 
     public Compra getCompra() {

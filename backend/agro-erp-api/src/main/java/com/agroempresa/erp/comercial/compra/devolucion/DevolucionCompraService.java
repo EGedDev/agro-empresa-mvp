@@ -12,6 +12,8 @@ import com.agroempresa.erp.comercial.compra.devolucion.dto.DevolucionCompraRespo
 import com.agroempresa.erp.comercial.compra.devolucion.dto.RegistrarDevolucionCompraRequest;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeracionService;
+import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.inventario.InventarioService;
@@ -31,6 +33,7 @@ public class DevolucionCompraService {
 
     private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
             "id", "id",
+            "numero", "numero",
             "fechaDevolucion", "fechaDevolucion",
             "total", "total",
             "creadoEn", "creadoEn"
@@ -43,19 +46,22 @@ public class DevolucionCompraService {
     private final ProductoRepository productoRepository;
     private final InventarioService inventarioService;
     private final AuditoriaService auditoriaService;
+    private final NumeracionService numeracionService;
 
     public DevolucionCompraService(
             DevolucionCompraRepository devolucionCompraRepository,
             CompraRepository compraRepository,
             ProductoRepository productoRepository,
             InventarioService inventarioService,
-            AuditoriaService auditoriaService
+            AuditoriaService auditoriaService,
+            NumeracionService numeracionService
     ) {
         this.devolucionCompraRepository = devolucionCompraRepository;
         this.compraRepository = compraRepository;
         this.productoRepository = productoRepository;
         this.inventarioService = inventarioService;
         this.auditoriaService = auditoriaService;
+        this.numeracionService = numeracionService;
     }
 
     @Transactional(readOnly = true)
@@ -104,6 +110,7 @@ public class DevolucionCompraService {
         Map<Long, Producto> productos = buscarProductosParaActualizar(detallesValidados);
 
         DevolucionCompra devolucion = new DevolucionCompra(compra, normalizarMotivo(request.motivo()));
+        devolucion.asignarNumero(numeracionService.generar(TipoDocumento.DEVOLUCION_COMPRA));
         List<MovimientoInventarioPendiente> movimientosPendientes = new ArrayList<>();
 
         for (DetalleDevolucionCompraValidado detalleValidado : detallesValidados) {

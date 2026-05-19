@@ -7,6 +7,8 @@ import com.agroempresa.erp.comercial.compra.Compra;
 import com.agroempresa.erp.comercial.compra.CompraRepository;
 import com.agroempresa.erp.comercial.compra.EstadoCompra;
 import com.agroempresa.erp.common.error.BusinessException;
+import com.agroempresa.erp.common.numeracion.NumeracionService;
+import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.finanzas.EstadoPago;
 import com.agroempresa.erp.finanzas.MetodoPago;
 import com.agroempresa.erp.finanzas.caja.MovimientoCajaService;
@@ -45,6 +47,9 @@ class PagoCompraServiceTest {
     @Mock
     private MovimientoCajaService movimientoCajaService;
 
+    @Mock
+    private NumeracionService numeracionService;
+
     @InjectMocks
     private PagoCompraService pagoCompraService;
 
@@ -58,6 +63,7 @@ class PagoCompraServiceTest {
         );
 
         when(compraRepository.findByIdParaActualizar(1L)).thenReturn(Optional.of(compra));
+        when(numeracionService.generar(TipoDocumento.PAGO_COMPRA)).thenReturn("PC-000001");
         when(pagoCompraRepository.save(any(PagoCompra.class))).thenAnswer(invocation -> {
             PagoCompra pagoCompra = invocation.getArgument(0);
             ReflectionTestUtils.setField(pagoCompra, "id", 40L);
@@ -67,6 +73,7 @@ class PagoCompraServiceTest {
         PagoCompraResponse response = pagoCompraService.registrar(1L, request);
 
         assertThat(response.id()).isEqualTo(40L);
+        assertThat(response.numero()).isEqualTo("PC-000001");
         assertThat(response.compraId()).isEqualTo(1L);
         assertThat(response.monto()).isEqualByComparingTo("30.00");
         assertThat(compra.getTotalPagado()).isEqualByComparingTo("30.00");
@@ -85,6 +92,7 @@ class PagoCompraServiceTest {
         );
 
         when(compraRepository.findByIdParaActualizar(1L)).thenReturn(Optional.of(compra));
+        when(numeracionService.generar(TipoDocumento.PAGO_COMPRA)).thenReturn("PC-000002");
         when(pagoCompraRepository.save(any(PagoCompra.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         pagoCompraService.registrar(1L, request);

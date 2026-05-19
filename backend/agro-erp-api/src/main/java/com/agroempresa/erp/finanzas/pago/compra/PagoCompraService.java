@@ -6,6 +6,8 @@ import com.agroempresa.erp.comercial.compra.EstadoCompra;
 import com.agroempresa.erp.auditoria.AuditoriaService;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeracionService;
+import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.finanzas.MetodoPago;
@@ -27,6 +29,7 @@ public class PagoCompraService {
 
     private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
             "id", "id",
+            "numero", "numero",
             "fechaPago", "fechaPago",
             "monto", "monto",
             "metodoPago", "metodoPago",
@@ -39,17 +42,20 @@ public class PagoCompraService {
     private final CompraRepository compraRepository;
     private final AuditoriaService auditoriaService;
     private final MovimientoCajaService movimientoCajaService;
+    private final NumeracionService numeracionService;
 
     public PagoCompraService(
             PagoCompraRepository pagoCompraRepository,
             CompraRepository compraRepository,
             AuditoriaService auditoriaService,
-            MovimientoCajaService movimientoCajaService
+            MovimientoCajaService movimientoCajaService,
+            NumeracionService numeracionService
     ) {
         this.pagoCompraRepository = pagoCompraRepository;
         this.compraRepository = compraRepository;
         this.auditoriaService = auditoriaService;
         this.movimientoCajaService = movimientoCajaService;
+        this.numeracionService = numeracionService;
     }
 
     @Transactional(readOnly = true)
@@ -113,6 +119,7 @@ public class PagoCompraService {
                 request.metodoPago(),
                 normalizar(request.referencia())
         );
+        pagoCompra.asignarNumero(numeracionService.generar(TipoDocumento.PAGO_COMPRA));
 
         PagoCompra pagoGuardado = pagoCompraRepository.save(pagoCompra);
 
