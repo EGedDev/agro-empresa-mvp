@@ -208,6 +208,8 @@ cd backend/agro-erp-api
 - `GET /api/v1/inventario/movimientos/producto/{productoId}`
 - `GET /api/v1/auditoria/eventos`
 - `GET /api/v1/reportes/finanzas/resumen`
+- `GET /api/v1/reportes/finanzas/rentabilidad`
+- `GET /api/v1/reportes/finanzas/rentabilidad/productos`
 - `GET /api/v1/reportes/inventario/resumen`
 - `GET /api/v1/finanzas/caja/movimientos`
 - `GET /api/v1/finanzas/caja/resumen`
@@ -253,6 +255,8 @@ Filtros disponibles:
 - `GET /api/v1/inventario/movimientos?productoId=&tipo=&referenciaTipo=&desde=&hasta=`
 - `GET /api/v1/auditoria/eventos?username=&accion=&recursoTipo=&recursoId=&correlationId=&desde=&hasta=`
 - `GET /api/v1/reportes/finanzas/resumen?desde=&hasta=`
+- `GET /api/v1/reportes/finanzas/rentabilidad?desde=&hasta=`
+- `GET /api/v1/reportes/finanzas/rentabilidad/productos?desde=&hasta=&limite=`
 - `GET /api/v1/reportes/inventario/resumen?desde=&hasta=`
 - `GET /api/v1/finanzas/caja/movimientos?tipo=&metodoPago=&referenciaTipo=&referenciaId=&desde=&hasta=`
 - `GET /api/v1/finanzas/caja/resumen?desde=&hasta=`
@@ -306,6 +310,14 @@ financiero:
   `valorMovimiento`, `valorInventarioAnterior` y `valorInventarioNuevo`.
 - `GET /api/v1/reportes/inventario/resumen` incluye `valorInventarioTotal` y el valor
   acumulado de entradas/salidas del periodo.
+
+### Rentabilidad
+
+El reporte `GET /api/v1/reportes/finanzas/rentabilidad` calcula ingresos brutos, costo de
+ventas, devoluciones, costo devuelto, utilidad bruta y margen bruto porcentual del periodo.
+
+`GET /api/v1/reportes/finanzas/rentabilidad/productos` devuelve los productos ordenados por
+utilidad bruta, con unidades vendidas/devueltas, ingresos netos, costo neto y margen.
 
 ### Anulaciones de pagos
 

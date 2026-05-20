@@ -5,7 +5,9 @@ import com.agroempresa.erp.catalogo.categoria.CategoriaRepository;
 import com.agroempresa.erp.catalogo.producto.ProductoRepository;
 import com.agroempresa.erp.cliente.ClienteRepository;
 import com.agroempresa.erp.comercial.compra.CompraRepository;
+import com.agroempresa.erp.comercial.compra.devolucion.DevolucionCompraRepository;
 import com.agroempresa.erp.comercial.venta.VentaRepository;
+import com.agroempresa.erp.comercial.venta.devolucion.DevolucionVentaRepository;
 import com.agroempresa.erp.common.tracing.RequestTraceContext;
 import com.agroempresa.erp.finanzas.caja.CierreCajaRepository;
 import com.agroempresa.erp.finanzas.caja.MovimientoCajaRepository;
@@ -79,6 +81,12 @@ class ReportesFinancierosIntegrationTest {
     private CompraRepository compraRepository;
 
     @Autowired
+    private DevolucionVentaRepository devolucionVentaRepository;
+
+    @Autowired
+    private DevolucionCompraRepository devolucionCompraRepository;
+
+    @Autowired
     private ProductoRepository productoRepository;
 
     @Autowired
@@ -103,6 +111,8 @@ class ReportesFinancierosIntegrationTest {
         movimientoCajaRepository.deleteAll();
         pagoVentaRepository.deleteAll();
         pagoCompraRepository.deleteAll();
+        devolucionVentaRepository.deleteAll();
+        devolucionCompraRepository.deleteAll();
         movimientoInventarioRepository.deleteAll();
         ventaRepository.deleteAll();
         compraRepository.deleteAll();
@@ -185,6 +195,81 @@ class ReportesFinancierosIntegrationTest {
         assertThat(resumen.path("pagosRealizados").decimalValue()).isEqualByComparingTo("7.00");
         assertThat(resumen.path("flujoCajaNeto").decimalValue()).isEqualByComparingTo("5.00");
         assertThat(resumen.path("generadoEn").asText()).isNotBlank();
+    }
+
+    @Test
+    void rentabilidadCalculaIngresosCostosDevolucionesYMargenBruto() throws Exception {
+        String token = obtenerTokenAdmin();
+        Long categoriaId = crearCategoria(token, "Rentabilidad");
+        Long productoId = crearProductoConCosto(
+                token,
+                categoriaId,
+                "Fertilizante Rentable",
+                new BigDecimal("10.00"),
+                20,
+                new BigDecimal("4.00"),
+                3
+        );
+        Long clienteId = crearCliente(token, "Cliente Rentabilidad");
+
+        JsonNode venta = postJson(
+                "/api/v1/ventas",
+                Map.of(
+                        "clienteId", clienteId,
+                        "detalles", List.of(Map.of(
+                                "productoId", productoId,
+                                "cantidad", 5
+                        ))
+                ),
+                token
+        );
+
+        Long ventaId = venta.path("id").asLong();
+        Long ventaDetalleId = venta.path("detalles").get(0).path("id").asLong();
+
+        postJson(
+                "/api/v1/ventas/" + ventaId + "/devoluciones",
+                Map.of(
+                        "motivo", "Devolucion para rentabilidad",
+                        "detalles", List.of(Map.of(
+                                "ventaDetalleId", ventaDetalleId,
+                                "cantidad", 2
+                        ))
+                ),
+                token
+        );
+
+        LocalDate hoy = LocalDate.now();
+        JsonNode rentabilidad = getJson(
+                "/api/v1/reportes/finanzas/rentabilidad?desde=" + hoy + "&hasta=" + hoy,
+                token
+        );
+
+        assertThat(rentabilidad.path("ventas").asLong()).isEqualTo(1L);
+        assertThat(rentabilidad.path("ingresosBrutos").decimalValue()).isEqualByComparingTo("50.00");
+        assertThat(rentabilidad.path("costoVentasBruto").decimalValue()).isEqualByComparingTo("20.00");
+        assertThat(rentabilidad.path("devolucionesVenta").decimalValue()).isEqualByComparingTo("20.00");
+        assertThat(rentabilidad.path("costoDevuelto").decimalValue()).isEqualByComparingTo("8.00");
+        assertThat(rentabilidad.path("ingresosNetos").decimalValue()).isEqualByComparingTo("30.00");
+        assertThat(rentabilidad.path("costoVentasNeto").decimalValue()).isEqualByComparingTo("12.00");
+        assertThat(rentabilidad.path("utilidadBruta").decimalValue()).isEqualByComparingTo("18.00");
+        assertThat(rentabilidad.path("margenBrutoPorcentaje").decimalValue()).isEqualByComparingTo("60.00");
+
+        JsonNode productos = getJson(
+                "/api/v1/reportes/finanzas/rentabilidad/productos?desde=" + hoy + "&hasta=" + hoy + "&limite=5",
+                token
+        );
+
+        assertThat(productos).hasSize(1);
+        JsonNode producto = productos.get(0);
+        assertThat(producto.path("productoId").asLong()).isEqualTo(productoId);
+        assertThat(producto.path("unidadesVendidas").asLong()).isEqualTo(5L);
+        assertThat(producto.path("unidadesDevueltas").asLong()).isEqualTo(2L);
+        assertThat(producto.path("unidadesNetas").asLong()).isEqualTo(3L);
+        assertThat(producto.path("ingresosNetos").decimalValue()).isEqualByComparingTo("30.00");
+        assertThat(producto.path("costoVentasNeto").decimalValue()).isEqualByComparingTo("12.00");
+        assertThat(producto.path("utilidadBruta").decimalValue()).isEqualByComparingTo("18.00");
+        assertThat(producto.path("margenBrutoPorcentaje").decimalValue()).isEqualByComparingTo("60.00");
     }
 
     @Test
@@ -279,6 +364,30 @@ class ReportesFinancierosIntegrationTest {
                         "descripcion", "Producto de prueba",
                         "precioVenta", precioVenta,
                         "stockActual", stockActual,
+                        "stockMinimo", stockMinimo,
+                        "categoriaId", categoriaId
+                ),
+                token
+        ).path("id").asLong();
+    }
+
+    private Long crearProductoConCosto(
+            String token,
+            Long categoriaId,
+            String nombre,
+            BigDecimal precioVenta,
+            Integer stockActual,
+            BigDecimal costoInicial,
+            Integer stockMinimo
+    ) throws Exception {
+        return postJsonSinKey(
+                "/api/v1/productos",
+                Map.of(
+                        "nombre", nombre,
+                        "descripcion", "Producto de prueba",
+                        "precioVenta", precioVenta,
+                        "stockActual", stockActual,
+                        "costoInicial", costoInicial,
                         "stockMinimo", stockMinimo,
                         "categoriaId", categoriaId
                 ),

@@ -1,6 +1,7 @@
 package com.agroempresa.erp.comercial.venta;
 
 import com.agroempresa.erp.finanzas.EstadoPago;
+import com.agroempresa.erp.reportes.dto.AcumuladoRentabilidadProducto;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface VentaRepository extends JpaRepository<Venta, Long> {
@@ -75,6 +77,52 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
               AND v.fechaVenta < :hastaExclusivo
             """)
     BigDecimal sumarSaldoPendientePorEstadoYPeriodo(
+            @Param("estado") EstadoVenta estado,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT COALESCE(SUM(d.subtotal), 0)
+            FROM VentaDetalle d
+            WHERE d.venta.estado = :estado
+              AND d.venta.fechaVenta >= :desde
+              AND d.venta.fechaVenta < :hastaExclusivo
+            """)
+    BigDecimal sumarIngresosBrutosPorPeriodo(
+            @Param("estado") EstadoVenta estado,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT COALESCE(SUM(d.costoTotal), 0)
+            FROM VentaDetalle d
+            WHERE d.venta.estado = :estado
+              AND d.venta.fechaVenta >= :desde
+              AND d.venta.fechaVenta < :hastaExclusivo
+            """)
+    BigDecimal sumarCostoVentasBrutoPorPeriodo(
+            @Param("estado") EstadoVenta estado,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT new com.agroempresa.erp.reportes.dto.AcumuladoRentabilidadProducto(
+                d.producto.id,
+                d.producto.nombre,
+                COALESCE(SUM(d.cantidad), 0),
+                COALESCE(SUM(d.subtotal), 0),
+                COALESCE(SUM(d.costoTotal), 0)
+            )
+            FROM VentaDetalle d
+            WHERE d.venta.estado = :estado
+              AND d.venta.fechaVenta >= :desde
+              AND d.venta.fechaVenta < :hastaExclusivo
+            GROUP BY d.producto.id, d.producto.nombre
+            """)
+    List<AcumuladoRentabilidadProducto> sumarRentabilidadBrutaPorProducto(
             @Param("estado") EstadoVenta estado,
             @Param("desde") LocalDateTime desde,
             @Param("hastaExclusivo") LocalDateTime hastaExclusivo
