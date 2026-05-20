@@ -13,6 +13,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -20,13 +22,18 @@ import java.util.Map;
 @Service
 public class InventarioService {
 
+    private static final int ESCALA_COSTO = 4;
+    private static final int ESCALA_VALOR = 2;
+
     private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
             "id", "id",
             "creadoEn", "creadoEn",
             "tipo", "tipo",
             "cantidad", "cantidad",
             "stockAnterior", "stockAnterior",
-            "stockNuevo", "stockNuevo"
+            "stockNuevo", "stockNuevo",
+            "valorMovimiento", "valorMovimiento",
+            "valorInventarioNuevo", "valorInventarioNuevo"
     );
 
     private static final Sort ORDEN_DEFAULT = Sort.by(Sort.Direction.DESC, "creadoEn");
@@ -207,6 +214,162 @@ public class InventarioService {
     }
 
     @Transactional
+    public void registrarSalidaPorVenta(
+            Producto producto,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            Long ventaId,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo
+    ) {
+        registrarMovimientoValorizado(
+                producto,
+                TipoMovimientoInventario.SALIDA_POR_VENTA,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                costoUnitario,
+                valorInventarioAnterior,
+                valorInventarioNuevo,
+                "Salida de inventario por venta registrada",
+                "VENTA",
+                ventaId
+        );
+    }
+
+    @Transactional
+    public void registrarEntradaPorCancelacionVenta(
+            Producto producto,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            Long ventaId,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo
+    ) {
+        registrarMovimientoValorizado(
+                producto,
+                TipoMovimientoInventario.ENTRADA_POR_CANCELACION,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                costoUnitario,
+                valorInventarioAnterior,
+                valorInventarioNuevo,
+                "Entrada de inventario por cancelacion de venta",
+                "VENTA",
+                ventaId
+        );
+    }
+
+    @Transactional
+    public void registrarEntradaPorDevolucionVenta(
+            Producto producto,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            Long devolucionVentaId,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo
+    ) {
+        registrarMovimientoValorizado(
+                producto,
+                TipoMovimientoInventario.ENTRADA_POR_DEVOLUCION_VENTA,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                costoUnitario,
+                valorInventarioAnterior,
+                valorInventarioNuevo,
+                "Entrada de inventario por devolucion de venta",
+                "DEVOLUCION_VENTA",
+                devolucionVentaId
+        );
+    }
+
+    @Transactional
+    public void registrarEntradaPorCompra(
+            Producto producto,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            Long compraId,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo
+    ) {
+        registrarMovimientoValorizado(
+                producto,
+                TipoMovimientoInventario.ENTRADA_POR_COMPRA,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                costoUnitario,
+                valorInventarioAnterior,
+                valorInventarioNuevo,
+                "Entrada de inventario por compra registrada",
+                "COMPRA",
+                compraId
+        );
+    }
+
+    @Transactional
+    public void registrarSalidaPorCancelacionCompra(
+            Producto producto,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            Long compraId,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo
+    ) {
+        registrarMovimientoValorizado(
+                producto,
+                TipoMovimientoInventario.SALIDA_POR_CANCELACION_COMPRA,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                costoUnitario,
+                valorInventarioAnterior,
+                valorInventarioNuevo,
+                "Salida de inventario por cancelacion de compra",
+                "COMPRA",
+                compraId
+        );
+    }
+
+    @Transactional
+    public void registrarSalidaPorDevolucionCompra(
+            Producto producto,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            Long devolucionCompraId,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo
+    ) {
+        registrarMovimientoValorizado(
+                producto,
+                TipoMovimientoInventario.SALIDA_POR_DEVOLUCION_COMPRA,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                costoUnitario,
+                valorInventarioAnterior,
+                valorInventarioNuevo,
+                "Salida de inventario por devolucion de compra",
+                "DEVOLUCION_COMPRA",
+                devolucionCompraId
+        );
+    }
+
+    @Transactional
     public MovimientoInventarioResponse registrarMovimientoManual(RegistrarMovimientoInventarioRequest request) {
         Producto producto = productoRepository.findByIdParaActualizar(request.productoId())
                 .orElseThrow(() -> new RecursoNoEncontradoException(
@@ -220,19 +383,29 @@ public class InventarioService {
         TipoMovimientoInventario tipo = request.tipo();
         Integer cantidad = request.cantidad();
         Integer stockAnterior = producto.getStockActual();
+        BigDecimal valorInventarioAnterior = producto.getValorInventario();
+        BigDecimal costoUnitario = request.costoUnitario() == null
+                ? producto.getCostoPromedio()
+                : request.costoUnitario();
 
         switch (tipo) {
-            case ENTRADA_MANUAL, AJUSTE_POSITIVO -> producto.aumentarStock(cantidad);
-            case AJUSTE_NEGATIVO -> producto.descontarStock(cantidad);
+            case ENTRADA_MANUAL, AJUSTE_POSITIVO -> producto.aumentarStockConCosto(cantidad, costoUnitario);
+            case AJUSTE_NEGATIVO -> {
+                costoUnitario = producto.getCostoPromedio();
+                producto.descontarStockConCosto(cantidad, costoUnitario);
+            }
             default -> throw new BusinessException("Tipo de movimiento no permitido para registro manual");
         }
 
-        MovimientoInventario movimiento = registrarMovimiento(
+        MovimientoInventario movimiento = registrarMovimientoValorizado(
                 producto,
                 tipo,
                 cantidad,
                 stockAnterior,
                 producto.getStockActual(),
+                costoUnitario,
+                valorInventarioAnterior,
+                producto.getValorInventario(),
                 request.motivo().trim(),
                 "INVENTARIO_MANUAL",
                 null
@@ -270,6 +443,44 @@ public class InventarioService {
         );
 
         return movimientoInventarioRepository.save(movimiento);
+    }
+
+    private MovimientoInventario registrarMovimientoValorizado(
+            Producto producto,
+            TipoMovimientoInventario tipo,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo,
+            String motivo,
+            String referenciaTipo,
+            Long referenciaId
+    ) {
+        MovimientoInventario movimiento = new MovimientoInventario(
+                producto,
+                tipo,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                costoUnitario,
+                valorMovimiento(cantidad, costoUnitario),
+                valorInventarioAnterior,
+                valorInventarioNuevo,
+                motivo,
+                referenciaTipo,
+                referenciaId
+        );
+
+        return movimientoInventarioRepository.save(movimiento);
+    }
+
+    private BigDecimal valorMovimiento(Integer cantidad, BigDecimal costoUnitario) {
+        BigDecimal costo = costoUnitario == null ? BigDecimal.ZERO : costoUnitario;
+        return costo.setScale(ESCALA_COSTO, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(cantidad))
+                .setScale(ESCALA_VALOR, RoundingMode.HALF_UP);
     }
 
     private void validarProductoSiFueInformado(Long productoId) {

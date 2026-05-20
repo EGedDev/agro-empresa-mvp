@@ -15,8 +15,13 @@ public interface DevolucionCompraRepository extends JpaRepository<DevolucionComp
             SELECT d
             FROM DevolucionCompra d
             WHERE d.compra.id = :compraId
+              AND (:numero IS NULL OR d.numero = :numero)
             """)
-    Page<DevolucionCompra> buscarPorCompra(@Param("compraId") Long compraId, Pageable pageable);
+    Page<DevolucionCompra> buscarPorCompra(
+            @Param("compraId") Long compraId,
+            @Param("numero") String numero,
+            Pageable pageable
+    );
 
     @Query("""
             SELECT COALESCE(SUM(d.cantidad), 0)

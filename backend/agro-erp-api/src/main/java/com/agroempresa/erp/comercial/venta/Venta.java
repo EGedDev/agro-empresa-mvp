@@ -81,7 +81,11 @@ public class Venta {
     }
 
     public void agregarDetalle(Producto producto, Integer cantidad) {
-        VentaDetalle detalle = new VentaDetalle(producto, cantidad, producto.getPrecioVenta());
+        agregarDetalle(producto, cantidad, producto.getCostoPromedio());
+    }
+
+    public void agregarDetalle(Producto producto, Integer cantidad, BigDecimal costoUnitario) {
+        VentaDetalle detalle = new VentaDetalle(producto, cantidad, producto.getPrecioVenta(), costoUnitario);
         detalle.asignarVenta(this);
         this.detalles.add(detalle);
         recalcularTotal();

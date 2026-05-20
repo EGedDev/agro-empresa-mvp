@@ -17,12 +17,14 @@ public interface PagoVentaRepository extends JpaRepository<PagoVenta, Long> {
             SELECT p
             FROM PagoVenta p
             WHERE p.venta.id = :ventaId
+              AND (:numero IS NULL OR p.numero = :numero)
               AND (:metodoPago IS NULL OR p.metodoPago = :metodoPago)
               AND (:desde IS NULL OR p.fechaPago >= :desde)
               AND (:hastaExclusivo IS NULL OR p.fechaPago < :hastaExclusivo)
             """)
     Page<PagoVenta> buscarPorVenta(
             @Param("ventaId") Long ventaId,
+            @Param("numero") String numero,
             @Param("metodoPago") MetodoPago metodoPago,
             @Param("desde") LocalDateTime desde,
             @Param("hastaExclusivo") LocalDateTime hastaExclusivo,

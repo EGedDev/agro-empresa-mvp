@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
@@ -35,6 +36,13 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     boolean existsByNombreIgnoreCaseAndIdNot(String nombre, Long id);
 
     long countByActivoTrue();
+
+    @Query("""
+            SELECT COALESCE(SUM(p.valorInventario), 0)
+            FROM Producto p
+            WHERE p.activo = true
+            """)
+    BigDecimal sumarValorInventarioActivo();
 
     @Query("""
             SELECT COUNT(p)

@@ -23,6 +23,8 @@ public class ProductoService {
             "id", "id",
             "nombre", "nombre",
             "precioVenta", "precioVenta",
+            "costoPromedio", "costoPromedio",
+            "valorInventario", "valorInventario",
             "stockActual", "stockActual",
             "stockMinimo", "stockMinimo",
             "creadoEn", "creadoEn",
@@ -99,7 +101,8 @@ public class ProductoService {
                 request.precioVenta(),
                 request.stockActual(),
                 request.stockMinimo(),
-                categoria
+                categoria,
+                request.costoInicial()
         );
 
         Producto productoGuardado = productoRepository.save(producto);

@@ -8,6 +8,7 @@ import com.agroempresa.erp.comercial.compra.dto.CompraRequest;
 import com.agroempresa.erp.comercial.compra.dto.CompraResponse;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeroDocumento;
 import com.agroempresa.erp.common.numeracion.NumeracionService;
 import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
@@ -73,6 +74,7 @@ public class CompraService {
 
     @Transactional(readOnly = true)
     public PaginaResponse<CompraResponse> listar(
+            String numero,
             Long proveedorId,
             EstadoCompra estado,
             EstadoPago estadoPago,
@@ -87,6 +89,7 @@ public class CompraService {
 
         return PaginaResponse.desde(
                 compraRepository.buscar(
+                        NumeroDocumento.normalizarFiltro(numero),
                         proveedorId,
                         estado,
                         estadoPago,
@@ -115,7 +118,7 @@ public class CompraService {
             throw new BusinessException("El proveedor es obligatorio");
         }
 
-        return listar(proveedorId, null, null, null, null, pagina, tamanio, orden);
+        return listar(null, proveedorId, null, null, null, null, pagina, tamanio, orden);
     }
 
     @Transactional(readOnly = true)
@@ -129,7 +132,7 @@ public class CompraService {
             throw new BusinessException("El estado de la compra es obligatorio");
         }
 
-        return listar(null, estado, null, null, null, pagina, tamanio, orden);
+        return listar(null, null, estado, null, null, null, pagina, tamanio, orden);
     }
 
     @Transactional
@@ -156,22 +159,27 @@ public class CompraService {
         for (CompraDetalleRequest detalleRequest : request.detalles()) {
             Producto producto = productos.get(detalleRequest.productoId());
             Integer stockAnterior = producto.getStockActual();
+            BigDecimal costoUnitario = detalleRequest.costoUnitario();
+            BigDecimal valorInventarioAnterior = producto.getValorInventario();
 
-            producto.aumentarStock(detalleRequest.cantidad());
+            producto.aumentarStockConCosto(detalleRequest.cantidad(), costoUnitario);
 
             Integer stockNuevo = producto.getStockActual();
 
             compra.agregarDetalle(
                     producto,
                     detalleRequest.cantidad(),
-                    detalleRequest.costoUnitario()
+                    costoUnitario
             );
 
             movimientosPendientes.add(new MovimientoInventarioPendiente(
                     producto,
                     detalleRequest.cantidad(),
                     stockAnterior,
-                    stockNuevo
+                    stockNuevo,
+                    costoUnitario,
+                    valorInventarioAnterior,
+                    producto.getValorInventario()
             ));
         }
 
@@ -183,7 +191,10 @@ public class CompraService {
                     movimiento.cantidad(),
                     movimiento.stockAnterior(),
                     movimiento.stockNuevo(),
-                    compraGuardada.getId()
+                    compraGuardada.getId(),
+                    movimiento.costoUnitario(),
+                    movimiento.valorInventarioAnterior(),
+                    movimiento.valorInventarioNuevo()
             );
         }
 
@@ -220,15 +231,19 @@ public class CompraService {
         for (CompraDetalle detalle : compra.getDetalles()) {
             Producto producto = productos.get(detalle.getProducto().getId());
             Integer stockAnterior = producto.getStockActual();
+            BigDecimal valorInventarioAnterior = producto.getValorInventario();
 
-            producto.descontarStock(detalle.getCantidad());
+            producto.descontarStockConCosto(detalle.getCantidad(), detalle.getCostoUnitario());
 
             inventarioService.registrarSalidaPorCancelacionCompra(
                     producto,
                     detalle.getCantidad(),
                     stockAnterior,
                     producto.getStockActual(),
-                    compra.getId()
+                    compra.getId(),
+                    detalle.getCostoUnitario(),
+                    valorInventarioAnterior,
+                    producto.getValorInventario()
             );
         }
 
@@ -386,7 +401,10 @@ public class CompraService {
             Producto producto,
             Integer cantidad,
             Integer stockAnterior,
-            Integer stockNuevo
+            Integer stockNuevo,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo
     ) {
     }
 }

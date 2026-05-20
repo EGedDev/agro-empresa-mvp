@@ -5,11 +5,16 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "movimientos_inventario")
 public class MovimientoInventario {
+
+    private static final int ESCALA_COSTO = 4;
+    private static final int ESCALA_VALOR = 2;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +37,18 @@ public class MovimientoInventario {
 
     @Column(nullable = false)
     private Integer stockNuevo;
+
+    @Column(nullable = false, precision = 12, scale = 4)
+    private BigDecimal costoUnitario;
+
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal valorMovimiento;
+
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal valorInventarioAnterior;
+
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal valorInventarioNuevo;
 
     @Column(nullable = false, length = 250)
     private String motivo;
@@ -57,14 +74,56 @@ public class MovimientoInventario {
             String referenciaTipo,
             Long referenciaId
     ) {
+        this(
+                producto,
+                tipo,
+                cantidad,
+                stockAnterior,
+                stockNuevo,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                motivo,
+                referenciaTipo,
+                referenciaId
+        );
+    }
+
+    public MovimientoInventario(
+            Producto producto,
+            TipoMovimientoInventario tipo,
+            Integer cantidad,
+            Integer stockAnterior,
+            Integer stockNuevo,
+            BigDecimal costoUnitario,
+            BigDecimal valorMovimiento,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo,
+            String motivo,
+            String referenciaTipo,
+            Long referenciaId
+    ) {
         this.producto = producto;
         this.tipo = tipo;
         this.cantidad = cantidad;
         this.stockAnterior = stockAnterior;
         this.stockNuevo = stockNuevo;
+        this.costoUnitario = normalizarCosto(costoUnitario);
+        this.valorMovimiento = normalizarValor(valorMovimiento);
+        this.valorInventarioAnterior = normalizarValor(valorInventarioAnterior);
+        this.valorInventarioNuevo = normalizarValor(valorInventarioNuevo);
         this.motivo = motivo;
         this.referenciaTipo = referenciaTipo;
         this.referenciaId = referenciaId;
+    }
+
+    private BigDecimal normalizarCosto(BigDecimal valor) {
+        return (valor == null ? BigDecimal.ZERO : valor).setScale(ESCALA_COSTO, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal normalizarValor(BigDecimal valor) {
+        return (valor == null ? BigDecimal.ZERO : valor).setScale(ESCALA_VALOR, RoundingMode.HALF_UP);
     }
 
     @PrePersist
@@ -94,6 +153,22 @@ public class MovimientoInventario {
 
     public Integer getStockNuevo() {
         return stockNuevo;
+    }
+
+    public BigDecimal getCostoUnitario() {
+        return costoUnitario;
+    }
+
+    public BigDecimal getValorMovimiento() {
+        return valorMovimiento;
+    }
+
+    public BigDecimal getValorInventarioAnterior() {
+        return valorInventarioAnterior;
+    }
+
+    public BigDecimal getValorInventarioNuevo() {
+        return valorInventarioNuevo;
     }
 
     public String getMotivo() {

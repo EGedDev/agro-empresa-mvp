@@ -9,6 +9,8 @@ import com.agroempresa.erp.reportes.dto.ResumenMovimientosInventario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -19,6 +21,7 @@ public class ReporteInventarioService {
     private static final Set<TipoMovimientoInventario> TIPOS_ENTRADA = Set.of(
             TipoMovimientoInventario.ENTRADA_MANUAL,
             TipoMovimientoInventario.ENTRADA_POR_CANCELACION,
+            TipoMovimientoInventario.ENTRADA_POR_DEVOLUCION_VENTA,
             TipoMovimientoInventario.ENTRADA_POR_COMPRA,
             TipoMovimientoInventario.AJUSTE_POSITIVO
     );
@@ -26,6 +29,7 @@ public class ReporteInventarioService {
     private static final Set<TipoMovimientoInventario> TIPOS_SALIDA = Set.of(
             TipoMovimientoInventario.SALIDA_POR_VENTA,
             TipoMovimientoInventario.SALIDA_POR_CANCELACION_COMPRA,
+            TipoMovimientoInventario.SALIDA_POR_DEVOLUCION_COMPRA,
             TipoMovimientoInventario.AJUSTE_NEGATIVO
     );
 
@@ -54,6 +58,7 @@ public class ReporteInventarioService {
                 hasta,
                 productoRepository.countByActivoTrue(),
                 productoRepository.contarActivosConStockBajo(),
+                normalizarValor(productoRepository.sumarValorInventarioActivo()),
                 entradas,
                 salidas,
                 entradas.unidades() - salidas.unidades(),
@@ -68,12 +73,21 @@ public class ReporteInventarioService {
     ) {
         return new ResumenMovimientosInventario(
                 movimientoInventarioRepository.contarPorTiposYPeriodo(tipos, desde, hastaExclusivo),
-                cantidad(movimientoInventarioRepository.sumarCantidadPorTiposYPeriodo(tipos, desde, hastaExclusivo))
+                cantidad(movimientoInventarioRepository.sumarCantidadPorTiposYPeriodo(tipos, desde, hastaExclusivo)),
+                normalizarValor(movimientoInventarioRepository.sumarValorMovimientoPorTiposYPeriodo(
+                        tipos,
+                        desde,
+                        hastaExclusivo
+                ))
         );
     }
 
     private long cantidad(Long valor) {
         return valor == null ? 0L : valor;
+    }
+
+    private BigDecimal normalizarValor(BigDecimal valor) {
+        return (valor == null ? BigDecimal.ZERO : valor).setScale(2, RoundingMode.HALF_UP);
     }
 
     private void validarRangoFechas(LocalDate desde, LocalDate hasta) {

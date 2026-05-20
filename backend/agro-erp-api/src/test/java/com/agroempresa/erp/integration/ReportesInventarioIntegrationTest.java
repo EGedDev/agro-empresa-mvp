@@ -116,14 +116,31 @@ class ReportesInventarioIntegrationTest {
     void resumenInventarioCalculaStockBajoEntradasSalidasYUnidadesNetas() throws Exception {
         String token = obtenerTokenAdmin();
         Long categoriaId = crearCategoria(token, "Reporte Inventario");
-        Long productoOperativoId = crearProducto(token, categoriaId, "Producto Operativo", new BigDecimal("10.00"), 10, 3);
-        crearProducto(token, categoriaId, "Producto Bajo Stock", new BigDecimal("8.00"), 1, 2);
+        Long productoOperativoId = crearProducto(
+                token,
+                categoriaId,
+                "Producto Operativo",
+                new BigDecimal("10.00"),
+                10,
+                new BigDecimal("4.00"),
+                3
+        );
+        crearProducto(
+                token,
+                categoriaId,
+                "Producto Bajo Stock",
+                new BigDecimal("8.00"),
+                1,
+                new BigDecimal("8.00"),
+                2
+        );
 
         registrarMovimientoInventario(
                 token,
                 productoOperativoId,
                 "ENTRADA_MANUAL",
                 5,
+                new BigDecimal("6.00"),
                 "Ingreso para reporte"
         );
         registrarMovimientoInventario(
@@ -131,6 +148,7 @@ class ReportesInventarioIntegrationTest {
                 productoOperativoId,
                 "AJUSTE_NEGATIVO",
                 2,
+                null,
                 "Ajuste para reporte"
         );
 
@@ -144,10 +162,13 @@ class ReportesInventarioIntegrationTest {
         assertThat(resumen.path("hasta").asText()).isEqualTo(hoy.toString());
         assertThat(resumen.path("productosActivos").asLong()).isEqualTo(2L);
         assertThat(resumen.path("productosConStockBajo").asLong()).isEqualTo(1L);
+        assertThat(resumen.path("valorInventarioTotal").decimalValue()).isEqualByComparingTo("68.67");
         assertThat(resumen.path("entradas").path("cantidadMovimientos").asLong()).isEqualTo(1L);
         assertThat(resumen.path("entradas").path("unidades").asLong()).isEqualTo(5L);
+        assertThat(resumen.path("entradas").path("valor").decimalValue()).isEqualByComparingTo("30.00");
         assertThat(resumen.path("salidas").path("cantidadMovimientos").asLong()).isEqualTo(1L);
         assertThat(resumen.path("salidas").path("unidades").asLong()).isEqualTo(2L);
+        assertThat(resumen.path("salidas").path("valor").decimalValue()).isEqualByComparingTo("9.33");
         assertThat(resumen.path("unidadesNetas").asLong()).isEqualTo(3L);
         assertThat(resumen.path("generadoEn").asText()).isNotBlank();
     }
@@ -235,6 +256,7 @@ class ReportesInventarioIntegrationTest {
             String nombre,
             BigDecimal precioVenta,
             Integer stockActual,
+            BigDecimal costoInicial,
             Integer stockMinimo
     ) throws Exception {
         return postJsonSinKey(
@@ -244,6 +266,7 @@ class ReportesInventarioIntegrationTest {
                         "descripcion", "Producto de prueba",
                         "precioVenta", precioVenta,
                         "stockActual", stockActual,
+                        "costoInicial", costoInicial,
                         "stockMinimo", stockMinimo,
                         "categoriaId", categoriaId
                 ),
@@ -256,18 +279,19 @@ class ReportesInventarioIntegrationTest {
             Long productoId,
             String tipo,
             Integer cantidad,
+            BigDecimal costoUnitario,
             String motivo
     ) throws Exception {
-        postJson(
-                "/api/v1/inventario/movimientos",
-                Map.of(
-                        "productoId", productoId,
-                        "tipo", tipo,
-                        "cantidad", cantidad,
-                        "motivo", motivo
-                ),
-                token
-        );
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("productoId", productoId);
+        body.put("tipo", tipo);
+        body.put("cantidad", cantidad);
+        if (costoUnitario != null) {
+            body.put("costoUnitario", costoUnitario);
+        }
+        body.put("motivo", motivo);
+
+        postJson("/api/v1/inventario/movimientos", body, token);
     }
 
     private JsonNode postJson(String url, Object body, String token) throws Exception {

@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -224,6 +225,18 @@ class NumeracionDocumentosIntegrationTest {
         assertThat(devolucionCompra.path("numero").asText()).isEqualTo("DC-000001");
         assertThat(cierreCaja.path("numero").asText()).isEqualTo("CC-000001");
         assertThat(secuenciaDocumentoRepository.count()).isEqualTo(7L);
+
+        assertListadoPorNumero("/api/v1/ventas?numero=v-000001", token, "V-000001");
+        assertListadoPorNumero("/api/v1/compras?numero=c-000001", token, "C-000001");
+        assertListadoPorNumero("/api/v1/ventas/" + ventaId + "/pagos?numero=pv-000001", token, "PV-000001");
+        assertListadoPorNumero("/api/v1/compras/" + compraId + "/pagos?numero=pc-000001", token, "PC-000001");
+        assertListadoPorNumero("/api/v1/ventas/" + ventaId + "/devoluciones?numero=dv-000001", token, "DV-000001");
+        assertListadoPorNumero(
+                "/api/v1/compras/" + compraId + "/devoluciones?numero=dc-000001",
+                token,
+                "DC-000001"
+        );
+        assertListadoPorNumero("/api/v1/finanzas/caja/cierres?numero=cc-000001", token, "CC-000001");
     }
 
     private String obtenerTokenAdmin() throws Exception {
@@ -319,6 +332,16 @@ class NumeracionDocumentosIntegrationTest {
                         .content(json(body)))
                 .andExpect(status().isCreated())
                 .andReturn());
+    }
+
+    private void assertListadoPorNumero(String url, String token, String numeroEsperado) throws Exception {
+        JsonNode pagina = jsonNode(mockMvc.perform(get(url)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andReturn());
+
+        assertThat(pagina.path("totalElementos").asLong()).isEqualTo(1L);
+        assertThat(pagina.path("contenido").get(0).path("numero").asText()).isEqualTo(numeroEsperado);
     }
 
     private JsonNode jsonNode(MvcResult result) throws Exception {

@@ -12,6 +12,7 @@ import com.agroempresa.erp.comercial.venta.devolucion.dto.DevolucionVentaRespons
 import com.agroempresa.erp.comercial.venta.devolucion.dto.RegistrarDevolucionVentaRequest;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeroDocumento;
 import com.agroempresa.erp.common.numeracion.NumeracionService;
 import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -67,6 +69,7 @@ public class DevolucionVentaService {
     @Transactional(readOnly = true)
     public PaginaResponse<DevolucionVentaResponse> listarPorVenta(
             Long ventaId,
+            String numero,
             Integer pagina,
             Integer tamanio,
             String orden
@@ -82,6 +85,7 @@ public class DevolucionVentaService {
         return PaginaResponse.desde(
                 devolucionVentaRepository.buscarPorVenta(
                         ventaId,
+                        NumeroDocumento.normalizarFiltro(numero),
                         Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)
                 ),
                 DevolucionVentaResponse::desdeEntidad
@@ -115,16 +119,22 @@ public class DevolucionVentaService {
 
         for (DetalleDevolucionVentaValidado detalleValidado : detallesValidados) {
             Producto producto = productos.get(detalleValidado.producto().getId());
+            VentaDetalle ventaDetalle = detalleValidado.ventaDetalle();
             Integer stockAnterior = producto.getStockActual();
+            BigDecimal costoUnitario = ventaDetalle.getCostoUnitario();
+            BigDecimal valorInventarioAnterior = producto.getValorInventario();
 
-            producto.aumentarStock(detalleValidado.cantidad());
-            devolucion.agregarDetalle(detalleValidado.ventaDetalle(), detalleValidado.cantidad());
+            producto.aumentarStockConCosto(detalleValidado.cantidad(), costoUnitario);
+            devolucion.agregarDetalle(ventaDetalle, detalleValidado.cantidad());
 
             movimientosPendientes.add(new MovimientoInventarioPendiente(
                     producto,
                     detalleValidado.cantidad(),
                     stockAnterior,
-                    producto.getStockActual()
+                    producto.getStockActual(),
+                    costoUnitario,
+                    valorInventarioAnterior,
+                    producto.getValorInventario()
             ));
         }
 
@@ -142,7 +152,10 @@ public class DevolucionVentaService {
                     movimiento.cantidad(),
                     movimiento.stockAnterior(),
                     movimiento.stockNuevo(),
-                    devolucionGuardada.getId()
+                    devolucionGuardada.getId(),
+                    movimiento.costoUnitario(),
+                    movimiento.valorInventarioAnterior(),
+                    movimiento.valorInventarioNuevo()
             );
         }
 
@@ -273,7 +286,10 @@ public class DevolucionVentaService {
             Producto producto,
             Integer cantidad,
             Integer stockAnterior,
-            Integer stockNuevo
+            Integer stockNuevo,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo
     ) {
     }
 }

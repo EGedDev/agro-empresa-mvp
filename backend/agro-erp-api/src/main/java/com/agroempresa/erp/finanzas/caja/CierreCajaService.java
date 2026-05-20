@@ -3,6 +3,7 @@ package com.agroempresa.erp.finanzas.caja;
 import com.agroempresa.erp.auditoria.AuditoriaService;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeroDocumento;
 import com.agroempresa.erp.common.numeracion.NumeracionService;
 import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
@@ -70,6 +71,7 @@ public class CierreCajaService {
 
     @Transactional(readOnly = true)
     public PaginaResponse<CierreCajaResponse> listar(
+            String numero,
             LocalDate desde,
             LocalDate hasta,
             Integer pagina,
@@ -80,6 +82,7 @@ public class CierreCajaService {
 
         return PaginaResponse.desde(
                 cierreCajaRepository.buscar(
+                        NumeroDocumento.normalizarFiltro(numero),
                         desde,
                         hasta,
                         Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)

@@ -28,6 +28,7 @@ public class PagoVentaController {
     @GetMapping
     public PaginaResponse<PagoVentaResponse> listarPorVenta(
             @PathVariable @Positive(message = "El id de la venta debe ser mayor a cero") Long ventaId,
+            @RequestParam(required = false) String numero,
             @RequestParam(required = false) MetodoPago metodoPago,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
@@ -35,7 +36,7 @@ public class PagoVentaController {
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sort
     ) {
-        return pagoVentaService.listarPorVenta(ventaId, metodoPago, desde, hasta, page, size, sort);
+        return pagoVentaService.listarPorVenta(ventaId, numero, metodoPago, desde, hasta, page, size, sort);
     }
 
     @PostMapping

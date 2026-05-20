@@ -92,7 +92,10 @@ class CompraServiceTest {
                 3,
                 4,
                 7,
-                20L
+                20L,
+                new BigDecimal("30.50"),
+                new BigDecimal("40.00"),
+                new BigDecimal("131.50")
         );
     }
 
@@ -135,7 +138,10 @@ class CompraServiceTest {
                 3,
                 8,
                 5,
-                20L
+                20L,
+                new BigDecimal("10.00"),
+                new BigDecimal("80.00"),
+                new BigDecimal("50.00")
         );
     }
 
@@ -204,7 +210,8 @@ class CompraServiceTest {
                 BigDecimal.valueOf(120),
                 stockActual,
                 2,
-                categoria
+                categoria,
+                new BigDecimal("10.00")
         );
         ReflectionTestUtils.setField(producto, "id", id);
         return producto;

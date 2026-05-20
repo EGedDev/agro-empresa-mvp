@@ -20,13 +20,15 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     @Query("""
             SELECT v
             FROM Venta v
-            WHERE (:clienteId IS NULL OR v.cliente.id = :clienteId)
+            WHERE (:numero IS NULL OR v.numero = :numero)
+              AND (:clienteId IS NULL OR v.cliente.id = :clienteId)
               AND (:estado IS NULL OR v.estado = :estado)
               AND (:estadoPago IS NULL OR v.estadoPago = :estadoPago)
               AND (:desde IS NULL OR v.fechaVenta >= :desde)
               AND (:hastaExclusivo IS NULL OR v.fechaVenta < :hastaExclusivo)
             """)
     Page<Venta> buscar(
+            @Param("numero") String numero,
             @Param("clienteId") Long clienteId,
             @Param("estado") EstadoVenta estado,
             @Param("estadoPago") EstadoPago estadoPago,
@@ -84,6 +86,7 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             WHERE v.estado = :estado
               AND v.estadoPago IN :estadosPago
               AND v.saldoPendiente > 0
+              AND (:numero IS NULL OR v.numero = :numero)
               AND (:clienteId IS NULL OR v.cliente.id = :clienteId)
               AND (:estadoPago IS NULL OR v.estadoPago = :estadoPago)
               AND (:desde IS NULL OR v.fechaVenta >= :desde)
@@ -99,6 +102,7 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     Page<Venta> buscarCuentasPorCobrar(
             @Param("estado") EstadoVenta estado,
             @Param("estadosPago") Collection<EstadoPago> estadosPago,
+            @Param("numero") String numero,
             @Param("clienteId") Long clienteId,
             @Param("estadoPago") EstadoPago estadoPago,
             @Param("desde") LocalDateTime desde,

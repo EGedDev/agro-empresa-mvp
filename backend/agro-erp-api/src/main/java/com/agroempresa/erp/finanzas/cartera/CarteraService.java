@@ -5,6 +5,7 @@ import com.agroempresa.erp.comercial.compra.EstadoCompra;
 import com.agroempresa.erp.comercial.venta.EstadoVenta;
 import com.agroempresa.erp.comercial.venta.VentaRepository;
 import com.agroempresa.erp.common.error.BusinessException;
+import com.agroempresa.erp.common.numeracion.NumeroDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.finanzas.EstadoPago;
@@ -31,6 +32,7 @@ public class CarteraService {
 
     private static final Map<String, String> CAMPOS_ORDENABLES_COBRAR = Map.of(
             "id", "id",
+            "numero", "numero",
             "fecha", "fechaVenta",
             "fechaVencimiento", "fechaVencimiento",
             "total", "total",
@@ -42,6 +44,7 @@ public class CarteraService {
 
     private static final Map<String, String> CAMPOS_ORDENABLES_PAGAR = Map.of(
             "id", "id",
+            "numero", "numero",
             "fecha", "fechaCompra",
             "fechaVencimiento", "fechaVencimiento",
             "total", "total",
@@ -64,6 +67,7 @@ public class CarteraService {
 
     @Transactional(readOnly = true)
     public PaginaResponse<CuentaPorCobrarResponse> listarCuentasPorCobrar(
+            String numero,
             Long clienteId,
             EstadoPago estadoPago,
             LocalDate desde,
@@ -82,6 +86,7 @@ public class CarteraService {
                 ventaRepository.buscarCuentasPorCobrar(
                         EstadoVenta.REGISTRADA,
                         ESTADOS_ABIERTOS,
+                        NumeroDocumento.normalizarFiltro(numero),
                         clienteId,
                         estadoPago,
                         inicioDia(desde),
@@ -98,6 +103,7 @@ public class CarteraService {
 
     @Transactional(readOnly = true)
     public PaginaResponse<CuentaPorPagarResponse> listarCuentasPorPagar(
+            String numero,
             Long proveedorId,
             EstadoPago estadoPago,
             LocalDate desde,
@@ -116,6 +122,7 @@ public class CarteraService {
                 compraRepository.buscarCuentasPorPagar(
                         EstadoCompra.REGISTRADA,
                         ESTADOS_ABIERTOS,
+                        NumeroDocumento.normalizarFiltro(numero),
                         proveedorId,
                         estadoPago,
                         inicioDia(desde),

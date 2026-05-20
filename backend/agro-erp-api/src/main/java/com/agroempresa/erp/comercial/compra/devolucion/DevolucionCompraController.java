@@ -23,11 +23,12 @@ public class DevolucionCompraController {
     @GetMapping
     public PaginaResponse<DevolucionCompraResponse> listarPorCompra(
             @PathVariable @Positive(message = "El id de la compra debe ser mayor a cero") Long compraId,
+            @RequestParam(required = false) String numero,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sort
     ) {
-        return devolucionCompraService.listarPorCompra(compraId, page, size, sort);
+        return devolucionCompraService.listarPorCompra(compraId, numero, page, size, sort);
     }
 
     @PostMapping

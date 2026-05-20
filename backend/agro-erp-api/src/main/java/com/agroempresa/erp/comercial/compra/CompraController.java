@@ -26,6 +26,7 @@ public class CompraController {
 
     @GetMapping
     public PaginaResponse<CompraResponse> listar(
+            @RequestParam(required = false) String numero,
             @RequestParam(required = false) Long proveedorId,
             @RequestParam(required = false) EstadoCompra estado,
             @RequestParam(required = false) EstadoPago estadoPago,
@@ -35,7 +36,7 @@ public class CompraController {
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sort
     ) {
-        return compraService.listar(proveedorId, estado, estadoPago, desde, hasta, page, size, sort);
+        return compraService.listar(numero, proveedorId, estado, estadoPago, desde, hasta, page, size, sort);
     }
 
     @GetMapping("/proveedor/{proveedorId}")

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
@@ -50,6 +51,19 @@ public interface MovimientoInventarioRepository extends JpaRepository<Movimiento
               AND m.creadoEn < :hastaExclusivo
             """)
     Long sumarCantidadPorTiposYPeriodo(
+            @Param("tipos") Collection<TipoMovimientoInventario> tipos,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT COALESCE(SUM(m.valorMovimiento), 0)
+            FROM MovimientoInventario m
+            WHERE m.tipo IN :tipos
+              AND m.creadoEn >= :desde
+              AND m.creadoEn < :hastaExclusivo
+            """)
+    BigDecimal sumarValorMovimientoPorTiposYPeriodo(
             @Param("tipos") Collection<TipoMovimientoInventario> tipos,
             @Param("desde") LocalDateTime desde,
             @Param("hastaExclusivo") LocalDateTime hastaExclusivo

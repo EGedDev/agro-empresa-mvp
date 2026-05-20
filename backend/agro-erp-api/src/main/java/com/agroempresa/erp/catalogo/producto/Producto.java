@@ -4,11 +4,17 @@ import com.agroempresa.erp.catalogo.categoria.Categoria;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "productos")
 public class Producto {
+
+    private static final int ESCALA_COSTO = 4;
+    private static final int ESCALA_VALOR = 2;
+    private static final BigDecimal COSTO_CERO = BigDecimal.ZERO.setScale(ESCALA_COSTO);
+    private static final BigDecimal VALOR_CERO = BigDecimal.ZERO.setScale(ESCALA_VALOR);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,6 +28,12 @@ public class Producto {
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal precioVenta;
+
+    @Column(nullable = false, precision = 12, scale = 4)
+    private BigDecimal costoPromedio;
+
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal valorInventario;
 
     @Column(nullable = false)
     private Integer stockActual;
@@ -53,6 +65,18 @@ public class Producto {
             Integer stockMinimo,
             Categoria categoria
     ) {
+        this(nombre, descripcion, precioVenta, stockActual, stockMinimo, categoria, COSTO_CERO);
+    }
+
+    public Producto(
+            String nombre,
+            String descripcion,
+            BigDecimal precioVenta,
+            Integer stockActual,
+            Integer stockMinimo,
+            Categoria categoria,
+            BigDecimal costoInicial
+    ) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precioVenta = precioVenta;
@@ -60,6 +84,7 @@ public class Producto {
         this.stockMinimo = stockMinimo;
         this.categoria = categoria;
         this.activo = true;
+        inicializarValoracion(costoInicial);
     }
 
     public void actualizar(
@@ -81,29 +106,87 @@ public class Producto {
     }
 
     public void descontarStock(Integer cantidad) {
+        descontarStockConCosto(cantidad, this.costoPromedio);
+    }
+
+    public void descontarStockConCosto(Integer cantidad, BigDecimal costoUnitario) {
         validarCantidadMovimiento(cantidad);
 
         if (this.stockActual < cantidad) {
             throw new IllegalArgumentException("Stock insuficiente para descontar inventario");
         }
 
+        BigDecimal valorSalida = valorMovimiento(cantidad, costoUnitario);
         this.stockActual = this.stockActual - cantidad;
+        actualizarValorInventario(this.valorInventario.subtract(valorSalida));
     }
 
     public void aumentarStock(Integer cantidad) {
+        aumentarStockConCosto(cantidad, this.costoPromedio);
+    }
+
+    public void aumentarStockConCosto(Integer cantidad, BigDecimal costoUnitario) {
         validarCantidadMovimiento(cantidad);
 
+        BigDecimal valorEntrada = valorMovimiento(cantidad, costoUnitario);
         try {
             this.stockActual = Math.addExact(this.stockActual, cantidad);
         } catch (ArithmeticException ex) {
             throw new IllegalArgumentException("El stock supera el límite permitido");
         }
+
+        actualizarValorInventario(this.valorInventario.add(valorEntrada));
     }
 
     private void validarCantidadMovimiento(Integer cantidad) {
         if (cantidad == null || cantidad <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser mayor a cero");
         }
+    }
+
+    private void inicializarValoracion(BigDecimal costoInicial) {
+        this.costoPromedio = normalizarCosto(costoInicial);
+
+        if (this.stockActual == null || this.stockActual == 0) {
+            this.valorInventario = VALOR_CERO;
+            this.costoPromedio = COSTO_CERO;
+            return;
+        }
+
+        this.valorInventario = valorMovimiento(this.stockActual, this.costoPromedio);
+    }
+
+    private BigDecimal valorMovimiento(Integer cantidad, BigDecimal costoUnitario) {
+        return normalizarCosto(costoUnitario)
+                .multiply(BigDecimal.valueOf(cantidad))
+                .setScale(ESCALA_VALOR, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal normalizarCosto(BigDecimal costoUnitario) {
+        if (costoUnitario == null) {
+            return COSTO_CERO;
+        }
+
+        if (costoUnitario.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El costo unitario no puede ser negativo");
+        }
+
+        return costoUnitario.setScale(ESCALA_COSTO, RoundingMode.HALF_UP);
+    }
+
+    private void actualizarValorInventario(BigDecimal nuevoValor) {
+        if (this.stockActual == 0) {
+            this.valorInventario = VALOR_CERO;
+            this.costoPromedio = COSTO_CERO;
+            return;
+        }
+
+        this.valorInventario = nuevoValor.max(BigDecimal.ZERO).setScale(ESCALA_VALOR, RoundingMode.HALF_UP);
+        this.costoPromedio = this.valorInventario.divide(
+                BigDecimal.valueOf(this.stockActual),
+                ESCALA_COSTO,
+                RoundingMode.HALF_UP
+        );
     }
 
 
@@ -132,6 +215,14 @@ public class Producto {
 
     public BigDecimal getPrecioVenta() {
         return precioVenta;
+    }
+
+    public BigDecimal getCostoPromedio() {
+        return costoPromedio;
+    }
+
+    public BigDecimal getValorInventario() {
+        return valorInventario;
     }
 
     public Integer getStockActual() {

@@ -26,6 +26,7 @@ public class VentaController {
 
     @GetMapping
     public PaginaResponse<VentaResponse> listar(
+            @RequestParam(required = false) String numero,
             @RequestParam(required = false) Long clienteId,
             @RequestParam(required = false) EstadoVenta estado,
             @RequestParam(required = false) EstadoPago estadoPago,
@@ -35,7 +36,7 @@ public class VentaController {
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sort
     ) {
-        return ventaService.listar(clienteId, estado, estadoPago, desde, hasta, page, size, sort);
+        return ventaService.listar(numero, clienteId, estado, estadoPago, desde, hasta, page, size, sort);
     }
 
     @GetMapping("/cliente/{clienteId}")

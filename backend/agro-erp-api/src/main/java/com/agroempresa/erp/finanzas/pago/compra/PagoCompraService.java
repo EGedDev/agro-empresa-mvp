@@ -6,6 +6,7 @@ import com.agroempresa.erp.comercial.compra.EstadoCompra;
 import com.agroempresa.erp.auditoria.AuditoriaService;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeroDocumento;
 import com.agroempresa.erp.common.numeracion.NumeracionService;
 import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
@@ -61,6 +62,7 @@ public class PagoCompraService {
     @Transactional(readOnly = true)
     public PaginaResponse<PagoCompraResponse> listarPorCompra(
             Long compraId,
+            String numero,
             MetodoPago metodoPago,
             LocalDate desde,
             LocalDate hasta,
@@ -81,6 +83,7 @@ public class PagoCompraService {
         return PaginaResponse.desde(
                 pagoCompraRepository.buscarPorCompra(
                         compraId,
+                        NumeroDocumento.normalizarFiltro(numero),
                         metodoPago,
                         inicioDia(desde),
                         inicioDiaPosterior(hasta),

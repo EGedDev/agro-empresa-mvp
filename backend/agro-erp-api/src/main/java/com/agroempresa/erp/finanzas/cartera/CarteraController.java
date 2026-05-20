@@ -25,6 +25,7 @@ public class CarteraController {
 
     @GetMapping("/cuentas-por-cobrar")
     public PaginaResponse<CuentaPorCobrarResponse> listarCuentasPorCobrar(
+            @RequestParam(required = false) String numero,
             @RequestParam(required = false) Long clienteId,
             @RequestParam(required = false) EstadoPago estadoPago,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -37,6 +38,7 @@ public class CarteraController {
             @RequestParam(required = false) String sort
     ) {
         return carteraService.listarCuentasPorCobrar(
+                numero,
                 clienteId,
                 estadoPago,
                 desde,
@@ -52,6 +54,7 @@ public class CarteraController {
 
     @GetMapping("/cuentas-por-pagar")
     public PaginaResponse<CuentaPorPagarResponse> listarCuentasPorPagar(
+            @RequestParam(required = false) String numero,
             @RequestParam(required = false) Long proveedorId,
             @RequestParam(required = false) EstadoPago estadoPago,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -64,6 +67,7 @@ public class CarteraController {
             @RequestParam(required = false) String sort
     ) {
         return carteraService.listarCuentasPorPagar(
+                numero,
                 proveedorId,
                 estadoPago,
                 desde,

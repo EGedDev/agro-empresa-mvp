@@ -31,6 +31,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -126,6 +127,7 @@ class CarteraIntegrationTest {
         LocalDate vencimientoFuturo = hoy.plusDays(3);
 
         Long ventaParcialId = crearVenta(token, clienteParcialId, productoId, 3, vencimientoPasado);
+        String numeroVentaParcial = ventaRepository.findById(ventaParcialId).orElseThrow().getNumero();
         registrarPagoVenta(token, ventaParcialId, new BigDecimal("10.00"));
         crearVenta(token, clientePendienteId, productoId, 4, vencimientoFuturo);
 
@@ -133,6 +135,7 @@ class CarteraIntegrationTest {
         registrarPagoVenta(token, ventaPagadaId, new BigDecimal("10.00"));
 
         Long compraParcialId = crearCompra(token, proveedorId, productoId, 4, new BigDecimal("5.00"), vencimientoPasado);
+        String numeroCompraParcial = compraRepository.findById(compraParcialId).orElseThrow().getNumero();
         registrarPagoCompra(token, compraParcialId, new BigDecimal("7.00"));
         crearCompra(token, proveedorId, productoId, 1, new BigDecimal("17.00"), vencimientoFuturo);
 
@@ -155,6 +158,7 @@ class CarteraIntegrationTest {
         );
         assertThat(cuentasParciales.path("totalElementos").asLong()).isEqualTo(1L);
         assertThat(cuentasParciales.path("contenido").get(0).path("ventaId").asLong()).isEqualTo(ventaParcialId);
+        assertThat(cuentasParciales.path("contenido").get(0).path("numero").asText()).isEqualTo(numeroVentaParcial);
         assertThat(cuentasParciales.path("contenido").get(0).path("fechaVencimiento").asText())
                 .isEqualTo(vencimientoPasado.toString());
         assertThat(cuentasParciales.path("contenido").get(0).path("vencida").asBoolean()).isTrue();
@@ -175,11 +179,31 @@ class CarteraIntegrationTest {
         assertThat(cuentasPorVencer.path("contenido").get(0).path("vencida").asBoolean()).isFalse();
         assertThat(cuentasPorVencer.path("contenido").get(0).path("diasVencida").asLong()).isZero();
 
+        JsonNode cuentaPorCobrarPorNumero = getJson(
+                "/api/v1/finanzas/cartera/cuentas-por-cobrar?numero="
+                        + numeroVentaParcial.toLowerCase(Locale.ROOT),
+                token
+        );
+        assertThat(cuentaPorCobrarPorNumero.path("totalElementos").asLong()).isEqualTo(1L);
+        assertThat(cuentaPorCobrarPorNumero.path("contenido").get(0).path("ventaId").asLong())
+                .isEqualTo(ventaParcialId);
+
         JsonNode cuentasPorPagar = getJson(
                 "/api/v1/finanzas/cartera/cuentas-por-pagar?proveedorId=" + proveedorId,
                 token
         );
         assertThat(cuentasPorPagar.path("totalElementos").asLong()).isEqualTo(2L);
+
+        JsonNode cuentaPorPagarPorNumero = getJson(
+                "/api/v1/finanzas/cartera/cuentas-por-pagar?numero="
+                        + numeroCompraParcial.toLowerCase(Locale.ROOT),
+                token
+        );
+        assertThat(cuentaPorPagarPorNumero.path("totalElementos").asLong()).isEqualTo(1L);
+        assertThat(cuentaPorPagarPorNumero.path("contenido").get(0).path("compraId").asLong())
+                .isEqualTo(compraParcialId);
+        assertThat(cuentaPorPagarPorNumero.path("contenido").get(0).path("numero").asText())
+                .isEqualTo(numeroCompraParcial);
 
         JsonNode resumen = getJson("/api/v1/finanzas/cartera/resumen", token);
         assertThat(resumen.path("cuentasPorCobrar").path("cantidadDocumentos").asLong()).isEqualTo(2L);

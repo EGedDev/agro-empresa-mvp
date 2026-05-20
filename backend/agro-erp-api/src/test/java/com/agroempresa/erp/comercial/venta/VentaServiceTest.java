@@ -97,7 +97,10 @@ class VentaServiceTest {
                 5,
                 10,
                 5,
-                15L
+                15L,
+                new BigDecimal("8.5000"),
+                new BigDecimal("85.00"),
+                new BigDecimal("42.50")
         );
     }
 
@@ -166,7 +169,10 @@ class VentaServiceTest {
                 2,
                 5,
                 7,
-                10L
+                10L,
+                new BigDecimal("8.5000"),
+                new BigDecimal("42.50"),
+                new BigDecimal("59.50")
         );
     }
 
@@ -203,7 +209,8 @@ class VentaServiceTest {
                 BigDecimal.valueOf(120),
                 stockActual,
                 2,
-                categoria
+                categoria,
+                new BigDecimal("8.50")
         );
     }
 }

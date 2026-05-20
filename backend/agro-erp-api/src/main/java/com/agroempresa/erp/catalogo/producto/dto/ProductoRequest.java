@@ -27,6 +27,10 @@ public record ProductoRequest(
         @Min(value = 0, message = "El stock actual no puede ser negativo")
         Integer stockActual,
 
+        @DecimalMin(value = "0.00", inclusive = true, message = "El costo inicial no puede ser negativo")
+        @Digits(integer = 10, fraction = 4, message = "El costo inicial debe tener como maximo 10 enteros y 4 decimales")
+        BigDecimal costoInicial,
+
         @NotNull(message = "El stock mínimo es obligatorio")
         @Min(value = 0, message = "El stock mínimo no puede ser negativo")
         Integer stockMinimo,

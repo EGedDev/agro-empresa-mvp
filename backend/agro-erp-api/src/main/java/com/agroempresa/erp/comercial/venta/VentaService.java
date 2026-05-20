@@ -10,6 +10,7 @@ import com.agroempresa.erp.comercial.venta.dto.VentaRequest;
 import com.agroempresa.erp.comercial.venta.dto.VentaResponse;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.numeracion.NumeroDocumento;
 import com.agroempresa.erp.common.numeracion.NumeracionService;
 import com.agroempresa.erp.common.numeracion.TipoDocumento;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -71,6 +73,7 @@ public class VentaService {
 
     @Transactional(readOnly = true)
     public PaginaResponse<VentaResponse> listar(
+            String numero,
             Long clienteId,
             EstadoVenta estado,
             EstadoPago estadoPago,
@@ -85,6 +88,7 @@ public class VentaService {
 
         return PaginaResponse.desde(
                 ventaRepository.buscar(
+                        NumeroDocumento.normalizarFiltro(numero),
                         clienteId,
                         estado,
                         estadoPago,
@@ -113,7 +117,7 @@ public class VentaService {
             throw new BusinessException("El cliente es obligatorio");
         }
 
-        return listar(clienteId, null, null, null, null, pagina, tamanio, orden);
+        return listar(null, clienteId, null, null, null, null, pagina, tamanio, orden);
     }
 
     @Transactional(readOnly = true)
@@ -127,7 +131,7 @@ public class VentaService {
             throw new BusinessException("El estado de la venta es obligatorio");
         }
 
-        return listar(null, estado, null, null, null, pagina, tamanio, orden);
+        return listar(null, null, estado, null, null, null, pagina, tamanio, orden);
     }
 
     @Transactional
@@ -150,18 +154,23 @@ public class VentaService {
         for (DetalleVentaValidado detalleValidado : detallesValidados) {
             Producto producto = detalleValidado.producto();
             Integer stockAnterior = producto.getStockActual();
+            BigDecimal costoUnitario = producto.getCostoPromedio();
+            BigDecimal valorInventarioAnterior = producto.getValorInventario();
 
-            producto.descontarStock(detalleValidado.cantidad());
+            producto.descontarStockConCosto(detalleValidado.cantidad(), costoUnitario);
 
             Integer stockNuevo = producto.getStockActual();
 
-            venta.agregarDetalle(producto, detalleValidado.cantidad());
+            venta.agregarDetalle(producto, detalleValidado.cantidad(), costoUnitario);
 
             movimientosPendientes.add(new MovimientoInventarioPendiente(
                     producto,
                     detalleValidado.cantidad(),
                     stockAnterior,
-                    stockNuevo
+                    stockNuevo,
+                    costoUnitario,
+                    valorInventarioAnterior,
+                    producto.getValorInventario()
             ));
         }
 
@@ -173,7 +182,10 @@ public class VentaService {
                     movimiento.cantidad(),
                     movimiento.stockAnterior(),
                     movimiento.stockNuevo(),
-                    ventaGuardada.getId()
+                    ventaGuardada.getId(),
+                    movimiento.costoUnitario(),
+                    movimiento.valorInventarioAnterior(),
+                    movimiento.valorInventarioNuevo()
             );
         }
 
@@ -202,15 +214,19 @@ public class VentaService {
         for (VentaDetalle detalle : venta.getDetalles()) {
             Producto producto = buscarProductoParaActualizar(detalle.getProducto().getId());
             Integer stockAnterior = producto.getStockActual();
+            BigDecimal valorInventarioAnterior = producto.getValorInventario();
 
-            producto.aumentarStock(detalle.getCantidad());
+            producto.aumentarStockConCosto(detalle.getCantidad(), detalle.getCostoUnitario());
 
             inventarioService.registrarEntradaPorCancelacionVenta(
                     producto,
                     detalle.getCantidad(),
                     stockAnterior,
                     producto.getStockActual(),
-                    venta.getId()
+                    venta.getId(),
+                    detalle.getCostoUnitario(),
+                    valorInventarioAnterior,
+                    producto.getValorInventario()
             );
         }
 
@@ -362,7 +378,10 @@ public class VentaService {
             Producto producto,
             Integer cantidad,
             Integer stockAnterior,
-            Integer stockNuevo
+            Integer stockNuevo,
+            BigDecimal costoUnitario,
+            BigDecimal valorInventarioAnterior,
+            BigDecimal valorInventarioNuevo
     ) {
     }
 }

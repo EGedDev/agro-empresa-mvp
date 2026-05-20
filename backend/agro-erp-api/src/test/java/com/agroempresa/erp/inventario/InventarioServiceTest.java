@@ -1,9 +1,9 @@
 package com.agroempresa.erp.inventario;
 
+import com.agroempresa.erp.auditoria.AuditoriaService;
 import com.agroempresa.erp.catalogo.categoria.Categoria;
 import com.agroempresa.erp.catalogo.producto.Producto;
 import com.agroempresa.erp.catalogo.producto.ProductoRepository;
-import com.agroempresa.erp.auditoria.AuditoriaService;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.inventario.dto.MovimientoInventarioResponse;
 import com.agroempresa.erp.inventario.dto.RegistrarMovimientoInventarioRequest;
@@ -45,7 +45,8 @@ class InventarioServiceTest {
                 1L,
                 TipoMovimientoInventario.AJUSTE_NEGATIVO,
                 3,
-                "Ajuste por conteo físico"
+                null,
+                "Ajuste por conteo fisico"
         );
 
         when(productoRepository.findByIdParaActualizar(1L)).thenReturn(Optional.of(producto));
@@ -63,7 +64,12 @@ class InventarioServiceTest {
         assertThat(movimiento.getTipo()).isEqualTo(TipoMovimientoInventario.AJUSTE_NEGATIVO);
         assertThat(movimiento.getStockAnterior()).isEqualTo(10);
         assertThat(movimiento.getStockNuevo()).isEqualTo(7);
+        assertThat(movimiento.getCostoUnitario()).isEqualByComparingTo(new BigDecimal("8.5000"));
+        assertThat(movimiento.getValorMovimiento()).isEqualByComparingTo(new BigDecimal("25.50"));
+        assertThat(movimiento.getValorInventarioAnterior()).isEqualByComparingTo(new BigDecimal("85.00"));
+        assertThat(movimiento.getValorInventarioNuevo()).isEqualByComparingTo(new BigDecimal("59.50"));
         assertThat(response.stockNuevo()).isEqualTo(7);
+        assertThat(response.valorMovimiento()).isEqualByComparingTo(new BigDecimal("25.50"));
     }
 
     @Test
@@ -73,6 +79,7 @@ class InventarioServiceTest {
                 1L,
                 TipoMovimientoInventario.SALIDA_POR_VENTA,
                 2,
+                null,
                 "Intento no permitido"
         );
 
@@ -92,7 +99,8 @@ class InventarioServiceTest {
                 BigDecimal.valueOf(120),
                 stockActual,
                 2,
-                categoria
+                categoria,
+                new BigDecimal("8.50")
         );
     }
 }

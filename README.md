@@ -35,6 +35,7 @@ Spring Boot.
 - Proveedores
 - Compras
 - Inventario y movimientos de stock
+- Kardex valorizado con costo promedio ponderado
 - Pagos de ventas y compras
 - Anulaciones de pagos con trazabilidad contable
 - Devoluciones de ventas y compras con ajuste de inventario
@@ -258,13 +259,16 @@ Filtros disponibles:
 - `GET /api/v1/finanzas/caja/resumen/metodos?desde=&hasta=`
 - `GET /api/v1/finanzas/caja/cierres?desde=&hasta=`
 - `GET /api/v1/finanzas/caja/cierres/diferencias?desde=&hasta=&metodoPago=&soloConDiferencia=`
-- `GET /api/v1/finanzas/cartera/cuentas-por-cobrar?clienteId=&estadoPago=&desde=&hasta=&venceDesde=&venceHasta=&vencida=`
-- `GET /api/v1/finanzas/cartera/cuentas-por-pagar?proveedorId=&estadoPago=&desde=&hasta=&venceDesde=&venceHasta=&vencida=`
+- `GET /api/v1/finanzas/cartera/cuentas-por-cobrar?numero=&clienteId=&estadoPago=&desde=&hasta=&venceDesde=&venceHasta=&vencida=`
+- `GET /api/v1/finanzas/cartera/cuentas-por-pagar?numero=&proveedorId=&estadoPago=&desde=&hasta=&venceDesde=&venceHasta=&vencida=`
 - `GET /api/v1/finanzas/cartera/resumen?desde=&hasta=`
-- `GET /api/v1/ventas/{ventaId}/pagos?metodoPago=&desde=&hasta=`
-- `GET /api/v1/compras/{compraId}/pagos?metodoPago=&desde=&hasta=`
-- `GET /api/v1/ventas/{ventaId}/devoluciones`
-- `GET /api/v1/compras/{compraId}/devoluciones`
+- `GET /api/v1/ventas?numero=&clienteId=&estado=&estadoPago=&desde=&hasta=`
+- `GET /api/v1/compras?numero=&proveedorId=&estado=&estadoPago=&desde=&hasta=`
+- `GET /api/v1/ventas/{ventaId}/pagos?numero=&metodoPago=&desde=&hasta=`
+- `GET /api/v1/compras/{compraId}/pagos?numero=&metodoPago=&desde=&hasta=`
+- `GET /api/v1/ventas/{ventaId}/devoluciones?numero=`
+- `GET /api/v1/compras/{compraId}/devoluciones?numero=`
+- `GET /api/v1/finanzas/caja/cierres?numero=&desde=&hasta=`
 
 Las fechas usan formato ISO `YYYY-MM-DD`.
 
@@ -286,6 +290,22 @@ transaccional, legible y no depende del `id` tecnico de base de datos.
 
 Los correlativos se generan con bloqueo transaccional para evitar duplicados cuando dos
 usuarios registran documentos al mismo tiempo.
+
+Los listados aceptan `numero` como filtro exacto normalizado, por ejemplo
+`GET /api/v1/ventas?numero=V-000001` o
+`GET /api/v1/finanzas/caja/cierres?numero=CC-000001`.
+
+### Inventario valorizado
+
+Productos y movimientos de inventario mantienen valorizacion para control operativo y
+financiero:
+
+- `ProductoResponse` expone `costoPromedio` y `valorInventario`.
+- Las compras y entradas manuales actualizan el costo promedio ponderado.
+- Las ventas, anulaciones y devoluciones registran movimientos con `costoUnitario`,
+  `valorMovimiento`, `valorInventarioAnterior` y `valorInventarioNuevo`.
+- `GET /api/v1/reportes/inventario/resumen` incluye `valorInventarioTotal` y el valor
+  acumulado de entradas/salidas del periodo.
 
 ### Anulaciones de pagos
 

@@ -35,6 +35,7 @@ class ValidacionMonetariaTest {
                 null,
                 new BigDecimal("120.999"),
                 10,
+                null,
                 2,
                 1L
         );

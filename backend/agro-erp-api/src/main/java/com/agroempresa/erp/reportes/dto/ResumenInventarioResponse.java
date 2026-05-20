@@ -1,5 +1,6 @@
 package com.agroempresa.erp.reportes.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -8,6 +9,7 @@ public record ResumenInventarioResponse(
         LocalDate hasta,
         long productosActivos,
         long productosConStockBajo,
+        BigDecimal valorInventarioTotal,
         ResumenMovimientosInventario entradas,
         ResumenMovimientosInventario salidas,
         long unidadesNetas,

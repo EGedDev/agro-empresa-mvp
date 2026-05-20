@@ -20,13 +20,15 @@ public interface CompraRepository extends JpaRepository<Compra, Long> {
     @Query("""
             SELECT c
             FROM Compra c
-            WHERE (:proveedorId IS NULL OR c.proveedor.id = :proveedorId)
+            WHERE (:numero IS NULL OR c.numero = :numero)
+              AND (:proveedorId IS NULL OR c.proveedor.id = :proveedorId)
               AND (:estado IS NULL OR c.estado = :estado)
               AND (:estadoPago IS NULL OR c.estadoPago = :estadoPago)
               AND (:desde IS NULL OR c.fechaCompra >= :desde)
               AND (:hastaExclusivo IS NULL OR c.fechaCompra < :hastaExclusivo)
             """)
     Page<Compra> buscar(
+            @Param("numero") String numero,
             @Param("proveedorId") Long proveedorId,
             @Param("estado") EstadoCompra estado,
             @Param("estadoPago") EstadoPago estadoPago,
@@ -84,6 +86,7 @@ public interface CompraRepository extends JpaRepository<Compra, Long> {
             WHERE c.estado = :estado
               AND c.estadoPago IN :estadosPago
               AND c.saldoPendiente > 0
+              AND (:numero IS NULL OR c.numero = :numero)
               AND (:proveedorId IS NULL OR c.proveedor.id = :proveedorId)
               AND (:estadoPago IS NULL OR c.estadoPago = :estadoPago)
               AND (:desde IS NULL OR c.fechaCompra >= :desde)
@@ -99,6 +102,7 @@ public interface CompraRepository extends JpaRepository<Compra, Long> {
     Page<Compra> buscarCuentasPorPagar(
             @Param("estado") EstadoCompra estado,
             @Param("estadosPago") Collection<EstadoPago> estadosPago,
+            @Param("numero") String numero,
             @Param("proveedorId") Long proveedorId,
             @Param("estadoPago") EstadoPago estadoPago,
             @Param("desde") LocalDateTime desde,

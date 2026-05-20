@@ -15,10 +15,12 @@ public interface CierreCajaRepository extends JpaRepository<CierreCaja, Long> {
     @Query("""
             SELECT c
             FROM CierreCaja c
-            WHERE (:desde IS NULL OR c.fechaDesde >= :desde)
+            WHERE (:numero IS NULL OR c.numero = :numero)
+              AND (:desde IS NULL OR c.fechaDesde >= :desde)
               AND (:hasta IS NULL OR c.fechaHasta <= :hasta)
             """)
     Page<CierreCaja> buscar(
+            @Param("numero") String numero,
             @Param("desde") LocalDate desde,
             @Param("hasta") LocalDate hasta,
             Pageable pageable

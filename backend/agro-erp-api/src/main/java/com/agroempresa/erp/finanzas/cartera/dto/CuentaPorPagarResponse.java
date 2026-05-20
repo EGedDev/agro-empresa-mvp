@@ -10,6 +10,7 @@ import java.time.temporal.ChronoUnit;
 
 public record CuentaPorPagarResponse(
         Long compraId,
+        String numero,
         Long proveedorId,
         String proveedorNombre,
         LocalDateTime fechaCompra,
@@ -28,6 +29,7 @@ public record CuentaPorPagarResponse(
 
         return new CuentaPorPagarResponse(
                 compra.getId(),
+                compra.getNumero(),
                 compra.getProveedor().getId(),
                 compra.getProveedor().getNombre(),
                 compra.getFechaCompra(),

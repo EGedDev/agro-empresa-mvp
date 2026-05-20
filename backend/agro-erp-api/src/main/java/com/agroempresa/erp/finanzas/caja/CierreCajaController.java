@@ -27,13 +27,14 @@ public class CierreCajaController {
 
     @GetMapping
     public PaginaResponse<CierreCajaResponse> listar(
+            @RequestParam(required = false) String numero,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sort
     ) {
-        return cierreCajaService.listar(desde, hasta, page, size, sort);
+        return cierreCajaService.listar(numero, desde, hasta, page, size, sort);
     }
 
     @GetMapping("/diferencias")
