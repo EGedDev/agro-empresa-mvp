@@ -5,7 +5,9 @@ import com.agroempresa.erp.catalogo.categoria.CategoriaRepository;
 import com.agroempresa.erp.catalogo.producto.ProductoRepository;
 import com.agroempresa.erp.cliente.ClienteRepository;
 import com.agroempresa.erp.comercial.compra.CompraRepository;
+import com.agroempresa.erp.comercial.compra.devolucion.DevolucionCompraRepository;
 import com.agroempresa.erp.comercial.venta.VentaRepository;
+import com.agroempresa.erp.comercial.venta.devolucion.DevolucionVentaRepository;
 import com.agroempresa.erp.common.tracing.RequestTraceContext;
 import com.agroempresa.erp.finanzas.caja.CierreCajaRepository;
 import com.agroempresa.erp.finanzas.caja.MovimientoCajaRepository;
@@ -68,6 +70,12 @@ class ReportesInventarioIntegrationTest {
     private PagoCompraRepository pagoCompraRepository;
 
     @Autowired
+    private DevolucionVentaRepository devolucionVentaRepository;
+
+    @Autowired
+    private DevolucionCompraRepository devolucionCompraRepository;
+
+    @Autowired
     private MovimientoInventarioRepository movimientoInventarioRepository;
 
     @Autowired
@@ -101,6 +109,8 @@ class ReportesInventarioIntegrationTest {
         movimientoCajaRepository.deleteAll();
         pagoVentaRepository.deleteAll();
         pagoCompraRepository.deleteAll();
+        devolucionVentaRepository.deleteAll();
+        devolucionCompraRepository.deleteAll();
         movimientoInventarioRepository.deleteAll();
         ventaRepository.deleteAll();
         compraRepository.deleteAll();

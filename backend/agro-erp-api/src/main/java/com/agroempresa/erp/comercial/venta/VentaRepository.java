@@ -2,6 +2,8 @@ package com.agroempresa.erp.comercial.venta;
 
 import com.agroempresa.erp.finanzas.EstadoPago;
 import com.agroempresa.erp.reportes.dto.AcumuladoRentabilidadProducto;
+import com.agroempresa.erp.reportes.dto.AcumuladoProductoReporte;
+import com.agroempresa.erp.reportes.dto.ResumenVentasClienteResponse;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -123,6 +125,45 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             GROUP BY d.producto.id, d.producto.nombre
             """)
     List<AcumuladoRentabilidadProducto> sumarRentabilidadBrutaPorProducto(
+            @Param("estado") EstadoVenta estado,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT new com.agroempresa.erp.reportes.dto.ResumenVentasClienteResponse(
+                v.cliente.id,
+                v.cliente.nombre,
+                COUNT(v),
+                COALESCE(SUM(v.total), 0),
+                COALESCE(SUM(v.saldoPendiente), 0)
+            )
+            FROM Venta v
+            WHERE v.estado = :estado
+              AND v.fechaVenta >= :desde
+              AND v.fechaVenta < :hastaExclusivo
+            GROUP BY v.cliente.id, v.cliente.nombre
+            """)
+    List<ResumenVentasClienteResponse> resumirVentasPorCliente(
+            @Param("estado") EstadoVenta estado,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT new com.agroempresa.erp.reportes.dto.AcumuladoProductoReporte(
+                d.producto.id,
+                d.producto.nombre,
+                COALESCE(SUM(d.cantidad), 0),
+                COALESCE(SUM(d.subtotal), 0)
+            )
+            FROM VentaDetalle d
+            WHERE d.venta.estado = :estado
+              AND d.venta.fechaVenta >= :desde
+              AND d.venta.fechaVenta < :hastaExclusivo
+            GROUP BY d.producto.id, d.producto.nombre
+            """)
+    List<AcumuladoProductoReporte> resumirVentasPorProducto(
             @Param("estado") EstadoVenta estado,
             @Param("desde") LocalDateTime desde,
             @Param("hastaExclusivo") LocalDateTime hastaExclusivo

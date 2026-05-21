@@ -210,6 +210,10 @@ cd backend/agro-erp-api
 - `GET /api/v1/reportes/finanzas/resumen`
 - `GET /api/v1/reportes/finanzas/rentabilidad`
 - `GET /api/v1/reportes/finanzas/rentabilidad/productos`
+- `GET /api/v1/reportes/gerenciales/ventas/clientes`
+- `GET /api/v1/reportes/gerenciales/ventas/productos`
+- `GET /api/v1/reportes/gerenciales/compras/proveedores`
+- `GET /api/v1/reportes/gerenciales/compras/productos`
 - `GET /api/v1/reportes/inventario/resumen`
 - `GET /api/v1/finanzas/caja/movimientos`
 - `GET /api/v1/finanzas/caja/resumen`
@@ -257,6 +261,10 @@ Filtros disponibles:
 - `GET /api/v1/reportes/finanzas/resumen?desde=&hasta=`
 - `GET /api/v1/reportes/finanzas/rentabilidad?desde=&hasta=`
 - `GET /api/v1/reportes/finanzas/rentabilidad/productos?desde=&hasta=&limite=`
+- `GET /api/v1/reportes/gerenciales/ventas/clientes?desde=&hasta=&limite=`
+- `GET /api/v1/reportes/gerenciales/ventas/productos?desde=&hasta=&limite=`
+- `GET /api/v1/reportes/gerenciales/compras/proveedores?desde=&hasta=&limite=`
+- `GET /api/v1/reportes/gerenciales/compras/productos?desde=&hasta=&limite=`
 - `GET /api/v1/reportes/inventario/resumen?desde=&hasta=`
 - `GET /api/v1/finanzas/caja/movimientos?tipo=&metodoPago=&referenciaTipo=&referenciaId=&desde=&hasta=`
 - `GET /api/v1/finanzas/caja/resumen?desde=&hasta=`
@@ -318,6 +326,15 @@ ventas, devoluciones, costo devuelto, utilidad bruta y margen bruto porcentual d
 
 `GET /api/v1/reportes/finanzas/rentabilidad/productos` devuelve los productos ordenados por
 utilidad bruta, con unidades vendidas/devueltas, ingresos netos, costo neto y margen.
+
+### Reportes gerenciales
+
+Los reportes gerenciales agregan operaciones por periodo y aceptan `limite` entre 1 y 100:
+
+- Ventas por cliente: cantidad de ventas, total neto y saldo pendiente.
+- Ventas por producto: unidades vendidas/devueltas/netas y total neto.
+- Compras por proveedor: cantidad de compras, total neto y saldo pendiente.
+- Compras por producto: unidades compradas/devueltas/netas y total neto.
 
 ### Anulaciones de pagos
 

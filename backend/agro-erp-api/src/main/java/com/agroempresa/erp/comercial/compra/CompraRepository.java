@@ -1,6 +1,8 @@
 package com.agroempresa.erp.comercial.compra;
 
 import com.agroempresa.erp.finanzas.EstadoPago;
+import com.agroempresa.erp.reportes.dto.AcumuladoProductoReporte;
+import com.agroempresa.erp.reportes.dto.ResumenComprasProveedorResponse;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface CompraRepository extends JpaRepository<Compra, Long> {
@@ -75,6 +78,45 @@ public interface CompraRepository extends JpaRepository<Compra, Long> {
               AND c.fechaCompra < :hastaExclusivo
             """)
     BigDecimal sumarSaldoPendientePorEstadoYPeriodo(
+            @Param("estado") EstadoCompra estado,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT new com.agroempresa.erp.reportes.dto.ResumenComprasProveedorResponse(
+                c.proveedor.id,
+                c.proveedor.nombre,
+                COUNT(c),
+                COALESCE(SUM(c.total), 0),
+                COALESCE(SUM(c.saldoPendiente), 0)
+            )
+            FROM Compra c
+            WHERE c.estado = :estado
+              AND c.fechaCompra >= :desde
+              AND c.fechaCompra < :hastaExclusivo
+            GROUP BY c.proveedor.id, c.proveedor.nombre
+            """)
+    List<ResumenComprasProveedorResponse> resumirComprasPorProveedor(
+            @Param("estado") EstadoCompra estado,
+            @Param("desde") LocalDateTime desde,
+            @Param("hastaExclusivo") LocalDateTime hastaExclusivo
+    );
+
+    @Query("""
+            SELECT new com.agroempresa.erp.reportes.dto.AcumuladoProductoReporte(
+                d.producto.id,
+                d.producto.nombre,
+                COALESCE(SUM(d.cantidad), 0),
+                COALESCE(SUM(d.subtotal), 0)
+            )
+            FROM CompraDetalle d
+            WHERE d.compra.estado = :estado
+              AND d.compra.fechaCompra >= :desde
+              AND d.compra.fechaCompra < :hastaExclusivo
+            GROUP BY d.producto.id, d.producto.nombre
+            """)
+    List<AcumuladoProductoReporte> resumirComprasPorProducto(
             @Param("estado") EstadoCompra estado,
             @Param("desde") LocalDateTime desde,
             @Param("hastaExclusivo") LocalDateTime hastaExclusivo
