@@ -3,12 +3,12 @@
 Sistema web en desarrollo para digitalizar la gestión logística y comercial de Itaven SAC,
 una MYPE del sector agrícola. El objetivo es construir una plataforma que permita administrar
 catálogo, clientes, ventas e inventario, reduciendo procesos manuales y dejando una base
-preparada para un futuro frontend comercial en React.
+preparada para operacion interna con frontend React.
 
 ## Estado
 
-Proyecto en etapa inicial de MVP. Actualmente el desarrollo se concentra en el backend con
-Spring Boot.
+Proyecto en etapa inicial de MVP. El backend concentra el nucleo transaccional del ERP y el
+frontend React ya inicia el panel interno para consumir la API.
 
 ## Stack
 
@@ -25,6 +25,9 @@ Spring Boot.
 - H2 para tests
 - Docker Compose
 - Maven Wrapper
+- React
+- Vite
+- TypeScript
 
 ## Módulos Backend
 
@@ -51,7 +54,7 @@ Spring Boot.
 ```text
 backend/agro-erp-api   API REST con Spring Boot
 infra                  Servicios de infraestructura local
-frontend               Futuro frontend React
+frontend               Aplicacion interna React
 docs                   Documentación del proyecto
 ```
 
@@ -73,6 +76,7 @@ $env:DB_URL="jdbc:postgresql://localhost:5433/agro_db"
 $env:DB_USERNAME="agro_user"
 $env:DB_PASSWORD="change_me_for_local_dev"
 $env:JWT_SECRET="change_this_local_development_secret_before_using_real_data"
+$env:CORS_ALLOWED_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
 ```
 
 ## Ejecutar Base De Datos
@@ -97,6 +101,24 @@ La API corre por defecto en:
 ```text
 http://localhost:8080
 ```
+
+## Ejecutar Frontend
+
+Desde otra terminal:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+La app interna corre por defecto en:
+
+```text
+http://127.0.0.1:5173
+```
+
+Configura `VITE_API_URL` si el backend usa otro host o puerto.
 
 ## Migraciones De Base De Datos
 
@@ -136,6 +158,18 @@ ADMIN, VENTAS, COMPRAS, INVENTARIO, GERENCIA
 
 Los endpoints de usuarios quedan reservados para `ADMIN`, y los eventos de auditoría para
 `ADMIN` o `GERENCIA`.
+
+## CORS para frontend
+
+El backend permite preflight CORS solo desde origenes configurados. En desarrollo el valor
+recomendado es:
+
+```text
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+La API expone `X-Correlation-Id` e `Idempotency-Replayed` para que el frontend pueda
+mostrar trazabilidad y distinguir respuestas recuperadas por idempotencia.
 
 ## Documentacion OpenAPI
 
