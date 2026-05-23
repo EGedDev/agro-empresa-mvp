@@ -120,6 +120,16 @@ http://127.0.0.1:5173
 
 Configura `VITE_API_URL` si el backend usa otro host o puerto.
 
+El panel interno del MVP permite:
+
+- Iniciar sesion o crear el primer administrador.
+- Consultar indicadores operativos y financieros.
+- Registrar categorias y productos.
+- Registrar clientes y proveedores.
+- Registrar ventas y compras con multiples lineas.
+- Registrar pagos de ventas y compras.
+- Consultar cartera por cobrar y por pagar.
+
 ## Migraciones De Base De Datos
 
 El perfil `dev` usa Flyway para crear y versionar el esquema de PostgreSQL. Hibernate queda
