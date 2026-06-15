@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export type Usuario = {
   id: number;
@@ -30,6 +30,12 @@ type ApiOptions = {
   body?: unknown;
   token?: string;
   idempotent?: boolean;
+};
+
+type UploadOptions = {
+  token: string;
+  file: File;
+  fieldName?: string;
 };
 
 export class ApiError extends Error {
@@ -72,6 +78,36 @@ export async function apiRequest<T>(path: string, options: ApiOptions = {}): Pro
   if (!response.ok) {
     throw new ApiError(
       data?.message ?? "No se pudo completar la operacion",
+      response.status,
+      data?.code,
+      data?.correlationId ?? response.headers.get("X-Correlation-Id") ?? undefined
+    );
+  }
+
+  return data as T;
+}
+
+export async function uploadFile<T>(path: string, options: UploadOptions): Promise<T> {
+  const headers = new Headers();
+  headers.set("Accept", "application/json");
+  headers.set("Authorization", `Bearer ${options.token}`);
+  headers.set("X-Correlation-Id", crypto.randomUUID());
+
+  const formData = new FormData();
+  formData.set(options.fieldName ?? "imagen", options.file);
+
+  const response = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers,
+    body: formData
+  });
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const data = contentType.includes("application/json") ? await response.json() : null;
+
+  if (!response.ok) {
+    throw new ApiError(
+      data?.message ?? "No se pudo completar la carga",
       response.status,
       data?.code,
       data?.correlationId ?? response.headers.get("X-Correlation-Id") ?? undefined

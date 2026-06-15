@@ -17,7 +17,9 @@ import com.agroempresa.erp.finanzas.EstadoPago;
 import com.agroempresa.erp.inventario.InventarioService;
 import com.agroempresa.erp.proveedor.Proveedor;
 import com.agroempresa.erp.proveedor.ProveedorRepository;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,19 +88,61 @@ public class CompraService {
     ) {
         validarProveedorSiFueInformado(proveedorId);
         validarRangoFechas(desde, hasta);
+        String numeroNormalizado = NumeroDocumento.normalizarFiltro(numero);
 
         return PaginaResponse.desde(
-                compraRepository.buscar(
-                        NumeroDocumento.normalizarFiltro(numero),
-                        proveedorId,
-                        estado,
-                        estadoPago,
-                        inicioDia(desde),
-                        inicioDiaPosterior(hasta),
+                compraRepository.findAll(
+                        construirFiltroBusqueda(
+                                numeroNormalizado,
+                                proveedorId,
+                                estado,
+                                estadoPago,
+                                inicioDia(desde),
+                                inicioDiaPosterior(hasta)
+                        ),
                         Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)
                 ),
                 CompraResponse::desdeEntidad
         );
+    }
+
+    private Specification<Compra> construirFiltroBusqueda(
+            String numero,
+            Long proveedorId,
+            EstadoCompra estado,
+            EstadoPago estadoPago,
+            LocalDateTime desde,
+            LocalDateTime hastaExclusivo
+    ) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (numero != null) {
+                predicates.add(criteriaBuilder.equal(root.get("numero"), numero));
+            }
+
+            if (proveedorId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("proveedor").get("id"), proveedorId));
+            }
+
+            if (estado != null) {
+                predicates.add(criteriaBuilder.equal(root.get("estado"), estado));
+            }
+
+            if (estadoPago != null) {
+                predicates.add(criteriaBuilder.equal(root.get("estadoPago"), estadoPago));
+            }
+
+            if (desde != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaCompra"), desde));
+            }
+
+            if (hastaExclusivo != null) {
+                predicates.add(criteriaBuilder.lessThan(root.get("fechaCompra"), hastaExclusivo));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Transactional(readOnly = true)

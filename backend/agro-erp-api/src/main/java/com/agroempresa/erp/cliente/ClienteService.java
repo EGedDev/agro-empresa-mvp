@@ -42,7 +42,7 @@ public class ClienteService {
     ) {
         return PaginaResponse.desde(
                 clienteRepository.buscar(
-                        Paginacion.normalizarTexto(buscar),
+                        Paginacion.normalizarTextoBusqueda(buscar),
                         activo,
                         Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)
                 ),

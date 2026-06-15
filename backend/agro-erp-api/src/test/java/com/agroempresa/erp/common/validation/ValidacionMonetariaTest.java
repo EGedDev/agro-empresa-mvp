@@ -37,7 +37,13 @@ class ValidacionMonetariaTest {
                 10,
                 null,
                 2,
-                1L
+                1L,
+                null,
+                null,
+                null,
+                true,
+                false,
+                0
         );
 
         Set<ConstraintViolation<ProductoRequest>> errores = validator.validate(request);

@@ -9,6 +9,7 @@ import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.inventario.dto.MovimientoInventarioResponse;
 import com.agroempresa.erp.inventario.dto.RegistrarMovimientoInventarioRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,16 +68,52 @@ public class InventarioService {
         validarRangoFechas(desde, hasta);
 
         return PaginaResponse.desde(
-                movimientoInventarioRepository.buscar(
-                        productoId,
-                        tipo,
-                        Paginacion.normalizarTexto(referenciaTipo),
-                        inicioDia(desde),
-                        inicioDiaPosterior(hasta),
+                movimientoInventarioRepository.findAll(
+                        filtroMovimientos(productoId, tipo, Paginacion.normalizarTexto(referenciaTipo), inicioDia(desde), inicioDiaPosterior(hasta)),
                         Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)
                 ),
                 MovimientoInventarioResponse::desde
         );
+    }
+
+    private Specification<MovimientoInventario> filtroMovimientos(
+            Long productoId,
+            TipoMovimientoInventario tipo,
+            String referenciaTipo,
+            LocalDateTime desde,
+            LocalDateTime hastaExclusivo
+    ) {
+        return (root, query, criteriaBuilder) -> {
+            var filtros = criteriaBuilder.conjunction();
+
+            if (productoId != null) {
+                filtros = criteriaBuilder.and(filtros, criteriaBuilder.equal(root.get("producto").get("id"), productoId));
+            }
+
+            if (tipo != null) {
+                filtros = criteriaBuilder.and(filtros, criteriaBuilder.equal(root.get("tipo"), tipo));
+            }
+
+            if (referenciaTipo != null) {
+                filtros = criteriaBuilder.and(
+                        filtros,
+                        criteriaBuilder.equal(
+                                criteriaBuilder.lower(criteriaBuilder.coalesce(root.<String>get("referenciaTipo"), "")),
+                                referenciaTipo
+                        )
+                );
+            }
+
+            if (desde != null) {
+                filtros = criteriaBuilder.and(filtros, criteriaBuilder.greaterThanOrEqualTo(root.<LocalDateTime>get("creadoEn"), desde));
+            }
+
+            if (hastaExclusivo != null) {
+                filtros = criteriaBuilder.and(filtros, criteriaBuilder.lessThan(root.<LocalDateTime>get("creadoEn"), hastaExclusivo));
+            }
+
+            return filtros;
+        };
     }
 
     @Transactional(readOnly = true)

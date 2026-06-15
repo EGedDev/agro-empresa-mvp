@@ -17,7 +17,9 @@ import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import com.agroempresa.erp.finanzas.EstadoPago;
 import com.agroempresa.erp.inventario.InventarioService;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,19 +87,61 @@ public class VentaService {
     ) {
         validarClienteSiFueInformado(clienteId);
         validarRangoFechas(desde, hasta);
+        String numeroNormalizado = NumeroDocumento.normalizarFiltro(numero);
 
         return PaginaResponse.desde(
-                ventaRepository.buscar(
-                        NumeroDocumento.normalizarFiltro(numero),
-                        clienteId,
-                        estado,
-                        estadoPago,
-                        inicioDia(desde),
-                        inicioDiaPosterior(hasta),
+                ventaRepository.findAll(
+                        construirFiltroBusqueda(
+                                numeroNormalizado,
+                                clienteId,
+                                estado,
+                                estadoPago,
+                                inicioDia(desde),
+                                inicioDiaPosterior(hasta)
+                        ),
                         Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)
                 ),
                 VentaResponse::desdeEntidad
         );
+    }
+
+    private Specification<Venta> construirFiltroBusqueda(
+            String numero,
+            Long clienteId,
+            EstadoVenta estado,
+            EstadoPago estadoPago,
+            LocalDateTime desde,
+            LocalDateTime hastaExclusivo
+    ) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (numero != null) {
+                predicates.add(criteriaBuilder.equal(root.get("numero"), numero));
+            }
+
+            if (clienteId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("cliente").get("id"), clienteId));
+            }
+
+            if (estado != null) {
+                predicates.add(criteriaBuilder.equal(root.get("estado"), estado));
+            }
+
+            if (estadoPago != null) {
+                predicates.add(criteriaBuilder.equal(root.get("estadoPago"), estadoPago));
+            }
+
+            if (desde != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaVenta"), desde));
+            }
+
+            if (hastaExclusivo != null) {
+                predicates.add(criteriaBuilder.lessThan(root.get("fechaVenta"), hastaExclusivo));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     @Transactional(readOnly = true)

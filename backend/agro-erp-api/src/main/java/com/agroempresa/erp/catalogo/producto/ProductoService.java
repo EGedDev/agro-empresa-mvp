@@ -7,41 +7,61 @@ import com.agroempresa.erp.catalogo.producto.dto.ProductoRequest;
 import com.agroempresa.erp.catalogo.producto.dto.ProductoResponse;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.error.RecursoNoEncontradoException;
+import com.agroempresa.erp.common.media.MediaProperties;
 import com.agroempresa.erp.common.pagination.PaginaResponse;
 import com.agroempresa.erp.common.pagination.Paginacion;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class ProductoService {
 
-    private static final Map<String, String> CAMPOS_ORDENABLES = Map.of(
-            "id", "id",
-            "nombre", "nombre",
-            "precioVenta", "precioVenta",
-            "costoPromedio", "costoPromedio",
-            "valorInventario", "valorInventario",
-            "stockActual", "stockActual",
-            "stockMinimo", "stockMinimo",
-            "creadoEn", "creadoEn",
-            "actualizadoEn", "actualizadoEn"
+    private static final Map<String, String> CAMPOS_ORDENABLES = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("nombre", "nombre"),
+            Map.entry("precioVenta", "precioVenta"),
+            Map.entry("costoPromedio", "costoPromedio"),
+            Map.entry("valorInventario", "valorInventario"),
+            Map.entry("stockActual", "stockActual"),
+            Map.entry("stockMinimo", "stockMinimo"),
+            Map.entry("visibleWeb", "visibleWeb"),
+            Map.entry("destacado", "destacado"),
+            Map.entry("ordenWeb", "ordenWeb"),
+            Map.entry("creadoEn", "creadoEn"),
+            Map.entry("actualizadoEn", "actualizadoEn")
     );
 
     private static final Sort ORDEN_DEFAULT = Sort.by(Sort.Direction.ASC, "nombre");
+    private static final Sort ORDEN_WEB_DEFAULT = Sort.by(
+            Sort.Order.desc("destacado"),
+            Sort.Order.asc("ordenWeb"),
+            Sort.Order.asc("nombre")
+    );
+    private static final long TAMANIO_MAXIMO_IMAGEN = 5 * 1024 * 1024;
 
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final MediaProperties mediaProperties;
 
     public ProductoService(
             ProductoRepository productoRepository,
-            CategoriaRepository categoriaRepository
+            CategoriaRepository categoriaRepository,
+            MediaProperties mediaProperties
     ) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
+        this.mediaProperties = mediaProperties;
     }
 
     @Transactional(readOnly = true)
@@ -56,7 +76,7 @@ public class ProductoService {
     ) {
         return PaginaResponse.desde(
                 productoRepository.buscar(
-                        Paginacion.normalizarTexto(buscar),
+                        Paginacion.normalizarTextoBusqueda(buscar),
                         activo,
                         categoriaId,
                         Boolean.TRUE.equals(stockBajo),
@@ -69,6 +89,24 @@ public class ProductoService {
     @Transactional(readOnly = true)
     public PaginaResponse<ProductoResponse> listarActivos(Integer pagina, Integer tamanio, String orden) {
         return listar(null, true, null, false, pagina, tamanio, orden);
+    }
+
+    @Transactional(readOnly = true)
+    public PaginaResponse<ProductoResponse> listarWeb(
+            String buscar,
+            Long categoriaId,
+            Integer pagina,
+            Integer tamanio,
+            String orden
+    ) {
+        return PaginaResponse.desde(
+                productoRepository.buscarWeb(
+                        Paginacion.normalizarTextoBusqueda(buscar),
+                        categoriaId,
+                        Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_WEB_DEFAULT)
+                ),
+                ProductoResponse::desdeEntidad
+        );
     }
 
     @Transactional(readOnly = true)
@@ -102,7 +140,13 @@ public class ProductoService {
                 request.stockActual(),
                 request.stockMinimo(),
                 categoria,
-                request.costoInicial()
+                request.costoInicial(),
+                request.imagenUrl(),
+                request.imagenAlt(),
+                request.resumenComercial(),
+                request.visibleWeb(),
+                request.destacado(),
+                request.ordenWeb()
         );
 
         Producto productoGuardado = productoRepository.save(producto);
@@ -125,9 +169,23 @@ public class ProductoService {
                 request.descripcion(),
                 request.precioVenta(),
                 request.stockMinimo(),
-                categoria
+                categoria,
+                conservarSiNulo(request.imagenUrl(), producto.getImagenUrl()),
+                conservarSiNulo(request.imagenAlt(), producto.getImagenAlt()),
+                conservarSiNulo(request.resumenComercial(), producto.getResumenComercial()),
+                request.visibleWeb() == null ? producto.getVisibleWeb() : request.visibleWeb(),
+                request.destacado() == null ? producto.getDestacado() : request.destacado(),
+                request.ordenWeb() == null ? producto.getOrdenWeb() : request.ordenWeb()
         );
 
+        return ProductoResponse.desdeEntidad(producto);
+    }
+
+    @Transactional
+    public ProductoResponse actualizarImagen(Long id, MultipartFile archivo) {
+        Producto producto = buscarProductoParaActualizar(id);
+        String imagenUrl = guardarImagen(producto.getId(), archivo);
+        producto.actualizarImagen(imagenUrl);
         return ProductoResponse.desdeEntidad(producto);
     }
 
@@ -171,4 +229,64 @@ public class ProductoService {
                 ));
     }
 
+    private String guardarImagen(Long productoId, MultipartFile archivo) {
+        if (archivo == null || archivo.isEmpty()) {
+            throw new BusinessException("Debes enviar una imagen de producto");
+        }
+
+        if (archivo.getSize() > TAMANIO_MAXIMO_IMAGEN) {
+            throw new BusinessException("La imagen no debe superar 5 MB");
+        }
+
+        String extension = extensionValida(archivo);
+        String nombreArchivo = "producto-%d-%s%s".formatted(productoId, UUID.randomUUID(), extension);
+        Path directorio = mediaProperties.uploadDir().resolve("productos").normalize().toAbsolutePath();
+        Path destino = directorio.resolve(nombreArchivo).normalize();
+
+        if (!destino.startsWith(directorio)) {
+            throw new BusinessException("Nombre de archivo invalido");
+        }
+
+        try {
+            Files.createDirectories(directorio);
+            Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            throw new BusinessException("No se pudo guardar la imagen del producto");
+        }
+
+        return "/media/productos/" + nombreArchivo;
+    }
+
+    private String extensionValida(MultipartFile archivo) {
+        String contentType = archivo.getContentType();
+        String nombreOriginal = archivo.getOriginalFilename();
+        String extension = "";
+
+        if (nombreOriginal != null) {
+            int punto = nombreOriginal.lastIndexOf('.');
+            if (punto >= 0) {
+                extension = nombreOriginal.substring(punto).toLowerCase(Locale.ROOT);
+            }
+        }
+
+        if (List.of(".jpg", ".jpeg", ".png", ".webp").contains(extension)) {
+            return extension;
+        }
+
+        if ("image/jpeg".equalsIgnoreCase(contentType)) {
+            return ".jpg";
+        }
+        if ("image/png".equalsIgnoreCase(contentType)) {
+            return ".png";
+        }
+        if ("image/webp".equalsIgnoreCase(contentType)) {
+            return ".webp";
+        }
+
+        throw new BusinessException("Solo se permiten imagenes JPG, PNG o WEBP");
+    }
+
+    private String conservarSiNulo(String valorNuevo, String valorActual) {
+        return valorNuevo == null ? valorActual : valorNuevo;
+    }
 }

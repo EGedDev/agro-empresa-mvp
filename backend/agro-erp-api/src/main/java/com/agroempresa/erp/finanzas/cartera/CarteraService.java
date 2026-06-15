@@ -2,7 +2,9 @@ package com.agroempresa.erp.finanzas.cartera;
 
 import com.agroempresa.erp.comercial.compra.CompraRepository;
 import com.agroempresa.erp.comercial.compra.EstadoCompra;
+import com.agroempresa.erp.comercial.compra.Compra;
 import com.agroempresa.erp.comercial.venta.EstadoVenta;
+import com.agroempresa.erp.comercial.venta.Venta;
 import com.agroempresa.erp.comercial.venta.VentaRepository;
 import com.agroempresa.erp.common.error.BusinessException;
 import com.agroempresa.erp.common.numeracion.NumeroDocumento;
@@ -13,7 +15,9 @@ import com.agroempresa.erp.finanzas.cartera.dto.CuentaPorCobrarResponse;
 import com.agroempresa.erp.finanzas.cartera.dto.CuentaPorPagarResponse;
 import com.agroempresa.erp.finanzas.cartera.dto.ResumenCarteraItem;
 import com.agroempresa.erp.finanzas.cartera.dto.ResumenCarteraResponse;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +61,8 @@ public class CarteraService {
 
     private static final Sort ORDEN_COBRAR_DEFAULT = Sort.by(Sort.Direction.ASC, "fechaVencimiento");
     private static final Sort ORDEN_PAGAR_DEFAULT = Sort.by(Sort.Direction.ASC, "fechaVencimiento");
+    private static final LocalDateTime FECHA_INICIO_SISTEMA = LocalDateTime.of(1900, 1, 1, 0, 0);
+    private static final LocalDateTime FECHA_FIN_SISTEMA = LocalDateTime.of(9999, 12, 31, 23, 59, 59);
 
     private final VentaRepository ventaRepository;
     private final CompraRepository compraRepository;
@@ -81,20 +88,21 @@ public class CarteraService {
     ) {
         validarConsulta(estadoPago, desde, hasta, venceDesde, venceHasta);
         LocalDate fechaReferencia = LocalDate.now();
+        String numeroNormalizado = NumeroDocumento.normalizarFiltro(numero);
 
         return PaginaResponse.desde(
-                ventaRepository.buscarCuentasPorCobrar(
-                        EstadoVenta.REGISTRADA,
-                        ESTADOS_ABIERTOS,
-                        NumeroDocumento.normalizarFiltro(numero),
-                        clienteId,
-                        estadoPago,
-                        inicioDia(desde),
-                        inicioDiaPosterior(hasta),
-                        venceDesde,
-                        venceHasta,
-                        vencida,
-                        fechaReferencia,
+                ventaRepository.findAll(
+                        construirFiltroCuentasPorCobrar(
+                                numeroNormalizado,
+                                clienteId,
+                                estadoPago,
+                                inicioDia(desde),
+                                inicioDiaPosterior(hasta),
+                                venceDesde,
+                                venceHasta,
+                                vencida,
+                                fechaReferencia
+                        ),
                         Paginacion.crear(page, size, sort, CAMPOS_ORDENABLES_COBRAR, ORDEN_COBRAR_DEFAULT)
                 ),
                 CuentaPorCobrarResponse::desdeEntidad
@@ -117,20 +125,21 @@ public class CarteraService {
     ) {
         validarConsulta(estadoPago, desde, hasta, venceDesde, venceHasta);
         LocalDate fechaReferencia = LocalDate.now();
+        String numeroNormalizado = NumeroDocumento.normalizarFiltro(numero);
 
         return PaginaResponse.desde(
-                compraRepository.buscarCuentasPorPagar(
-                        EstadoCompra.REGISTRADA,
-                        ESTADOS_ABIERTOS,
-                        NumeroDocumento.normalizarFiltro(numero),
-                        proveedorId,
-                        estadoPago,
-                        inicioDia(desde),
-                        inicioDiaPosterior(hasta),
-                        venceDesde,
-                        venceHasta,
-                        vencida,
-                        fechaReferencia,
+                compraRepository.findAll(
+                        construirFiltroCuentasPorPagar(
+                                numeroNormalizado,
+                                proveedorId,
+                                estadoPago,
+                                inicioDia(desde),
+                                inicioDiaPosterior(hasta),
+                                venceDesde,
+                                venceHasta,
+                                vencida,
+                                fechaReferencia
+                        ),
                         Paginacion.crear(page, size, sort, CAMPOS_ORDENABLES_PAGAR, ORDEN_PAGAR_DEFAULT)
                 ),
                 CuentaPorPagarResponse::desdeEntidad
@@ -141,8 +150,8 @@ public class CarteraService {
     public ResumenCarteraResponse obtenerResumen(LocalDate desde, LocalDate hasta) {
         validarRangoFechas(desde, hasta);
 
-        LocalDateTime inicio = inicioDia(desde);
-        LocalDateTime finExclusivo = inicioDiaPosterior(hasta);
+        LocalDateTime inicio = inicioDiaOInicioSistema(desde);
+        LocalDateTime finExclusivo = inicioDiaPosteriorOFinSistema(hasta);
         LocalDate fechaReferencia = LocalDate.now();
         ResumenCarteraItem cuentasPorCobrar = resumenCuentasPorCobrar(inicio, finExclusivo, fechaReferencia);
         ResumenCarteraItem cuentasPorPagar = resumenCuentasPorPagar(inicio, finExclusivo, fechaReferencia);
@@ -194,6 +203,61 @@ public class CarteraService {
         return resumen(cantidadTotal, saldoTotal, cantidadVencida, saldoVencido);
     }
 
+    private Specification<Venta> construirFiltroCuentasPorCobrar(
+            String numero,
+            Long clienteId,
+            EstadoPago estadoPago,
+            LocalDateTime desde,
+            LocalDateTime hastaExclusivo,
+            LocalDate venceDesde,
+            LocalDate venceHasta,
+            Boolean vencida,
+            LocalDate fechaReferencia
+    ) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(criteriaBuilder.equal(root.get("estado"), EstadoVenta.REGISTRADA));
+            predicates.add(root.get("estadoPago").in(ESTADOS_ABIERTOS));
+            predicates.add(criteriaBuilder.greaterThan(root.get("saldoPendiente"), BigDecimal.ZERO));
+
+            if (numero != null) {
+                predicates.add(criteriaBuilder.equal(root.get("numero"), numero));
+            }
+
+            if (clienteId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("cliente").get("id"), clienteId));
+            }
+
+            if (estadoPago != null) {
+                predicates.add(criteriaBuilder.equal(root.get("estadoPago"), estadoPago));
+            }
+
+            if (desde != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaVenta"), desde));
+            }
+
+            if (hastaExclusivo != null) {
+                predicates.add(criteriaBuilder.lessThan(root.get("fechaVenta"), hastaExclusivo));
+            }
+
+            if (venceDesde != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaVencimiento"), venceDesde));
+            }
+
+            if (venceHasta != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("fechaVencimiento"), venceHasta));
+            }
+
+            if (Boolean.TRUE.equals(vencida)) {
+                predicates.add(criteriaBuilder.lessThan(root.get("fechaVencimiento"), fechaReferencia));
+            } else if (Boolean.FALSE.equals(vencida)) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaVencimiento"), fechaReferencia));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
+    }
+
     private ResumenCarteraItem resumenCuentasPorPagar(
             LocalDateTime desde,
             LocalDateTime hastaExclusivo,
@@ -227,6 +291,61 @@ public class CarteraService {
         ));
 
         return resumen(cantidadTotal, saldoTotal, cantidadVencida, saldoVencido);
+    }
+
+    private Specification<Compra> construirFiltroCuentasPorPagar(
+            String numero,
+            Long proveedorId,
+            EstadoPago estadoPago,
+            LocalDateTime desde,
+            LocalDateTime hastaExclusivo,
+            LocalDate venceDesde,
+            LocalDate venceHasta,
+            Boolean vencida,
+            LocalDate fechaReferencia
+    ) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(criteriaBuilder.equal(root.get("estado"), EstadoCompra.REGISTRADA));
+            predicates.add(root.get("estadoPago").in(ESTADOS_ABIERTOS));
+            predicates.add(criteriaBuilder.greaterThan(root.get("saldoPendiente"), BigDecimal.ZERO));
+
+            if (numero != null) {
+                predicates.add(criteriaBuilder.equal(root.get("numero"), numero));
+            }
+
+            if (proveedorId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("proveedor").get("id"), proveedorId));
+            }
+
+            if (estadoPago != null) {
+                predicates.add(criteriaBuilder.equal(root.get("estadoPago"), estadoPago));
+            }
+
+            if (desde != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaCompra"), desde));
+            }
+
+            if (hastaExclusivo != null) {
+                predicates.add(criteriaBuilder.lessThan(root.get("fechaCompra"), hastaExclusivo));
+            }
+
+            if (venceDesde != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaVencimiento"), venceDesde));
+            }
+
+            if (venceHasta != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("fechaVencimiento"), venceHasta));
+            }
+
+            if (Boolean.TRUE.equals(vencida)) {
+                predicates.add(criteriaBuilder.lessThan(root.get("fechaVencimiento"), fechaReferencia));
+            } else if (Boolean.FALSE.equals(vencida)) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaVencimiento"), fechaReferencia));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     private ResumenCarteraItem resumen(
@@ -286,5 +405,13 @@ public class CarteraService {
 
     private LocalDateTime inicioDiaPosterior(LocalDate fecha) {
         return fecha == null ? null : fecha.plusDays(1).atStartOfDay();
+    }
+
+    private LocalDateTime inicioDiaOInicioSistema(LocalDate fecha) {
+        return fecha == null ? FECHA_INICIO_SISTEMA : fecha.atStartOfDay();
+    }
+
+    private LocalDateTime inicioDiaPosteriorOFinSistema(LocalDate fecha) {
+        return fecha == null ? FECHA_FIN_SISTEMA : fecha.plusDays(1).atStartOfDay();
     }
 }

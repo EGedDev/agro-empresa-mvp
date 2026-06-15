@@ -36,6 +36,21 @@ public record ProductoRequest(
         Integer stockMinimo,
 
         @NotNull(message = "La categoría es obligatoria")
-        Long categoriaId
+        Long categoriaId,
+
+        @Size(max = 500, message = "La URL de imagen no debe superar los 500 caracteres")
+        String imagenUrl,
+
+        @Size(max = 160, message = "El texto alternativo no debe superar los 160 caracteres")
+        String imagenAlt,
+
+        @Size(max = 700, message = "El resumen comercial no debe superar los 700 caracteres")
+        String resumenComercial,
+
+        Boolean visibleWeb,
+
+        Boolean destacado,
+
+        Integer ordenWeb
 ) {
 }

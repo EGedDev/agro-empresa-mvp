@@ -44,6 +44,24 @@ public class Producto {
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Column(name = "imagen_url", length = 500)
+    private String imagenUrl;
+
+    @Column(name = "imagen_alt", length = 160)
+    private String imagenAlt;
+
+    @Column(name = "resumen_comercial", length = 700)
+    private String resumenComercial;
+
+    @Column(name = "visible_web", nullable = false)
+    private Boolean visibleWeb = true;
+
+    @Column(nullable = false)
+    private Boolean destacado = false;
+
+    @Column(name = "orden_web", nullable = false)
+    private Integer ordenWeb = 0;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
@@ -77,6 +95,24 @@ public class Producto {
             Categoria categoria,
             BigDecimal costoInicial
     ) {
+        this(nombre, descripcion, precioVenta, stockActual, stockMinimo, categoria, costoInicial, null, null, null, true, false, 0);
+    }
+
+    public Producto(
+            String nombre,
+            String descripcion,
+            BigDecimal precioVenta,
+            Integer stockActual,
+            Integer stockMinimo,
+            Categoria categoria,
+            BigDecimal costoInicial,
+            String imagenUrl,
+            String imagenAlt,
+            String resumenComercial,
+            Boolean visibleWeb,
+            Boolean destacado,
+            Integer ordenWeb
+    ) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precioVenta = precioVenta;
@@ -85,6 +121,28 @@ public class Producto {
         this.categoria = categoria;
         this.activo = true;
         inicializarValoracion(costoInicial);
+        configurarComercial(imagenUrl, imagenAlt, resumenComercial, visibleWeb, destacado, ordenWeb);
+    }
+
+    public void actualizar(
+            String nombre,
+            String descripcion,
+            BigDecimal precioVenta,
+            Integer stockMinimo,
+            Categoria categoria,
+            String imagenUrl,
+            String imagenAlt,
+            String resumenComercial,
+            Boolean visibleWeb,
+            Boolean destacado,
+            Integer ordenWeb
+    ) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precioVenta = precioVenta;
+        this.stockMinimo = stockMinimo;
+        this.categoria = categoria;
+        configurarComercial(imagenUrl, imagenAlt, resumenComercial, visibleWeb, destacado, ordenWeb);
     }
 
     public void actualizar(
@@ -94,11 +152,29 @@ public class Producto {
             Integer stockMinimo,
             Categoria categoria
     ) {
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.precioVenta = precioVenta;
-        this.stockMinimo = stockMinimo;
-        this.categoria = categoria;
+        actualizar(nombre, descripcion, precioVenta, stockMinimo, categoria, imagenUrl, imagenAlt, resumenComercial, visibleWeb, destacado, ordenWeb);
+    }
+
+    public void actualizarImagen(String imagenUrl) {
+        this.imagenUrl = textoOpcional(imagenUrl);
+        this.imagenAlt = textoOpcional(this.imagenAlt) == null ? this.nombre : this.imagenAlt;
+        this.visibleWeb = true;
+    }
+
+    public void configurarComercial(
+            String imagenUrl,
+            String imagenAlt,
+            String resumenComercial,
+            Boolean visibleWeb,
+            Boolean destacado,
+            Integer ordenWeb
+    ) {
+        this.imagenUrl = textoOpcional(imagenUrl);
+        this.imagenAlt = textoOpcional(imagenAlt);
+        this.resumenComercial = textoOpcional(resumenComercial);
+        this.visibleWeb = visibleWeb == null || visibleWeb;
+        this.destacado = destacado != null && destacado;
+        this.ordenWeb = ordenWeb == null ? 0 : ordenWeb;
     }
 
     public void desactivar() {
@@ -174,6 +250,14 @@ public class Producto {
         return costoUnitario.setScale(ESCALA_COSTO, RoundingMode.HALF_UP);
     }
 
+    private String textoOpcional(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+
+        return valor.trim();
+    }
+
     private void actualizarValorInventario(BigDecimal nuevoValor) {
         if (this.stockActual == 0) {
             this.valorInventario = VALOR_CERO;
@@ -235,6 +319,30 @@ public class Producto {
 
     public Boolean getActivo() {
         return activo;
+    }
+
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public String getImagenAlt() {
+        return imagenAlt;
+    }
+
+    public String getResumenComercial() {
+        return resumenComercial;
+    }
+
+    public Boolean getVisibleWeb() {
+        return visibleWeb;
+    }
+
+    public Boolean getDestacado() {
+        return destacado;
+    }
+
+    public Integer getOrdenWeb() {
+        return ordenWeb;
     }
 
     public Categoria getCategoria() {

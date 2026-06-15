@@ -8,6 +8,7 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface VentaRepository extends JpaRepository<Venta, Long> {
+public interface VentaRepository extends JpaRepository<Venta, Long>, JpaSpecificationExecutor<Venta> {
 
     @Query("""
             SELECT v
@@ -209,8 +210,8 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             WHERE v.estado = :estado
               AND v.estadoPago IN :estadosPago
               AND v.saldoPendiente > 0
-              AND (:desde IS NULL OR v.fechaVenta >= :desde)
-              AND (:hastaExclusivo IS NULL OR v.fechaVenta < :hastaExclusivo)
+              AND v.fechaVenta >= :desde
+              AND v.fechaVenta < :hastaExclusivo
             """)
     long contarCuentasPorCobrar(
             @Param("estado") EstadoVenta estado,
@@ -225,8 +226,8 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             WHERE v.estado = :estado
               AND v.estadoPago IN :estadosPago
               AND v.saldoPendiente > 0
-              AND (:desde IS NULL OR v.fechaVenta >= :desde)
-              AND (:hastaExclusivo IS NULL OR v.fechaVenta < :hastaExclusivo)
+              AND v.fechaVenta >= :desde
+              AND v.fechaVenta < :hastaExclusivo
             """)
     BigDecimal sumarCuentasPorCobrar(
             @Param("estado") EstadoVenta estado,
@@ -242,8 +243,8 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
               AND v.estadoPago IN :estadosPago
               AND v.saldoPendiente > 0
               AND v.fechaVencimiento < :fechaReferencia
-              AND (:desde IS NULL OR v.fechaVenta >= :desde)
-              AND (:hastaExclusivo IS NULL OR v.fechaVenta < :hastaExclusivo)
+              AND v.fechaVenta >= :desde
+              AND v.fechaVenta < :hastaExclusivo
             """)
     long contarCuentasPorCobrarVencidas(
             @Param("estado") EstadoVenta estado,
@@ -260,8 +261,8 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
               AND v.estadoPago IN :estadosPago
               AND v.saldoPendiente > 0
               AND v.fechaVencimiento < :fechaReferencia
-              AND (:desde IS NULL OR v.fechaVenta >= :desde)
-              AND (:hastaExclusivo IS NULL OR v.fechaVenta < :hastaExclusivo)
+              AND v.fechaVenta >= :desde
+              AND v.fechaVenta < :hastaExclusivo
             """)
     BigDecimal sumarCuentasPorCobrarVencidas(
             @Param("estado") EstadoVenta estado,

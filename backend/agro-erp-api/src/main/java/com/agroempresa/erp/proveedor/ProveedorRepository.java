@@ -15,8 +15,7 @@ public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
     @Query("""
             SELECT p
             FROM Proveedor p
-            WHERE (:buscar IS NULL
-                   OR lower(p.nombre) LIKE concat('%', :buscar, '%')
+            WHERE (lower(p.nombre) LIKE concat('%', :buscar, '%')
                    OR lower(coalesce(p.documentoIdentidad, '')) LIKE concat('%', :buscar, '%')
                    OR lower(coalesce(p.email, '')) LIKE concat('%', :buscar, '%')
                    OR lower(coalesce(p.telefono, '')) LIKE concat('%', :buscar, '%'))

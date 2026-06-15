@@ -41,7 +41,7 @@ public class CategoriaService {
     ) {
         return PaginaResponse.desde(
                 categoriaRepository.buscar(
-                        Paginacion.normalizarTexto(buscar),
+                        Paginacion.normalizarTextoBusqueda(buscar),
                         activo,
                         Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)
                 ),

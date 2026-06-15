@@ -20,7 +20,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -56,6 +57,19 @@ button {
   color: #2f6f4e;
 }
 
+.brand-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.brand-logo.large {
+  width: 64px;
+  height: 64px;
+}
+
 .brand-mark strong {
   display: block;
   font-size: 18px;
@@ -69,8 +83,8 @@ button {
 }
 
 .brand-mark.compact {
-  min-height: 56px;
-  padding: 0 14px;
+  min-height: 78px;
+  padding: 0 16px;
 }
 
 .auth-tabs {
@@ -118,7 +132,8 @@ label {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   min-height: 42px;
   border: 1px solid #cbd6cc;
@@ -129,12 +144,30 @@ select {
   outline: none;
 }
 
+input[type="file"] {
+  min-height: 42px;
+  padding: 8px 10px;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  min-height: 18px;
+  accent-color: #2f6f4e;
+}
+
 input:focus {
   border-color: #2f6f4e;
   box-shadow: 0 0 0 3px rgb(47 111 78 / 14%);
 }
 
-select:focus {
+textarea {
+  min-height: 92px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+select:focus,
+textarea:focus {
   border-color: #2f6f4e;
   box-shadow: 0 0 0 3px rgb(47 111 78 / 14%);
 }
@@ -297,6 +330,23 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.field-with-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  min-width: 0;
+}
+
+.field-with-action label {
+  min-width: 0;
+}
+
+.compact-action {
+  min-width: 94px;
+  padding: 0 12px;
+}
+
 .metric,
 .panel {
   border: 1px solid #d8e0d6;
@@ -402,6 +452,79 @@ td {
   color: #25312c;
 }
 
+.attention-panel {
+  background:
+    linear-gradient(135deg, rgb(240 248 236 / 92%), rgb(255 255 255 / 96%)),
+    #ffffff;
+}
+
+.attention-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+.attention-card {
+  display: grid;
+  gap: 12px;
+  min-height: 210px;
+  padding: 14px;
+  border: 1px solid #d8e8d1;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgb(32 74 49 / 8%);
+}
+
+.attention-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.attention-card strong,
+.attention-card span,
+.attention-card em {
+  display: block;
+}
+
+.attention-card strong {
+  color: #15251d;
+  font-size: 16px;
+}
+
+.attention-card span,
+.attention-card p {
+  color: #5e6d65;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.attention-card em {
+  flex: 0 0 auto;
+  max-width: 132px;
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: #eef7dd;
+  color: #4f6f16;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.attention-card p {
+  margin: 0;
+}
+
+.attention-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-self: end;
+}
+
 .split-panels {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -432,8 +555,28 @@ td {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.quick-contact-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 1px solid #e1e7df;
+  background: #fbfcfb;
+}
+
 .full-span {
   grid-column: 1 / -1;
+}
+
+.check-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d8e0d6;
+  border-radius: 8px;
+  background: #fbfcfb;
 }
 
 .form-actions {
@@ -509,6 +652,189 @@ td {
   padding: 0 14px;
 }
 
+.customer-portal {
+  min-height: 100vh;
+  padding: clamp(18px, 4vw, 42px);
+  background:
+    linear-gradient(135deg, rgb(14 43 28 / 94%), rgb(42 111 78 / 84%)),
+    url("/comercial/portadas/linea-antistress-peptidos.jpeg") center / cover;
+}
+
+.customer-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  min-height: 240px;
+  margin: 0 auto 18px;
+  padding: 22px;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 28px 80px rgb(0 0 0 / 18%);
+}
+
+.customer-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.customer-copy p {
+  max-width: 680px;
+  margin: 0;
+  color: #5c6b64;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.customer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.customer-actions a {
+  padding: 0 14px;
+  text-decoration: none;
+}
+
+.customer-grid {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.web-admin-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 164px;
+  padding: 22px;
+  border: 1px solid #d8e0d6;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgb(22 63 40 / 94%), rgb(47 111 78 / 86%)),
+    url("/comercial/portadas/enraizamiento-cultivos.jpeg") center / cover;
+  color: #ffffff;
+}
+
+.web-admin-hero .eyebrow,
+.web-admin-hero h2 {
+  color: #ffffff;
+}
+
+.web-admin-hero h2 {
+  max-width: 720px;
+  font-size: 28px;
+  line-height: 1.05;
+}
+
+.web-admin-hero .primary-action {
+  flex: 0 0 auto;
+  border: 1px solid #d5ec4b;
+  background: #d5ec4b;
+  color: #183221;
+  padding: 0 16px;
+  text-decoration: none;
+}
+
+.web-image-preview {
+  display: grid;
+  min-height: 260px;
+  place-items: center;
+  border: 1px dashed #b9c9bb;
+  border-radius: 8px;
+  background: #fbfcfb;
+}
+
+.web-image-preview img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  padding: 12px;
+}
+
+.web-image-preview div {
+  display: grid;
+  gap: 8px;
+  place-items: center;
+  color: #68756f;
+  font-weight: 800;
+}
+
+.web-price-form {
+  margin: 0 14px 14px;
+  border: 1px solid #e0e7de;
+  border-radius: 8px;
+  background: #fbfcfb;
+}
+
+.web-product-list {
+  display: grid;
+  gap: 10px;
+  max-height: 620px;
+  overflow: auto;
+  padding: 14px;
+}
+
+.web-product-list article {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 72px;
+  border: 1px solid #e0e7de;
+  border-radius: 8px;
+  padding: 8px;
+  background: #ffffff;
+}
+
+.web-product-list article.muted {
+  opacity: 0.62;
+}
+
+.web-product-thumb {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border-radius: 8px;
+  background: #eef4ec;
+  color: #2f6f4e;
+  overflow: hidden;
+}
+
+.web-product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.web-product-list strong,
+.web-product-list span,
+.web-product-list small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.web-product-list span {
+  margin-top: 3px;
+  color: #66736c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.web-product-list small {
+  margin-top: 3px;
+  color: #2f6f4e;
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
 .spin {
   animation: spin 0.9s linear infinite;
 }
@@ -548,12 +874,15 @@ td {
 
   .dashboard-grid,
   .form-grid,
-  .split-panels {
+  .split-panels,
+  .attention-list {
     grid-template-columns: 1fr;
   }
 
   .data-form.two-columns,
   .form-grid.compact,
+  .field-with-action,
+  .quick-contact-form,
   .line-item {
     grid-template-columns: 1fr;
   }
@@ -561,6 +890,19 @@ td {
   .topbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .web-admin-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .customer-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-actions {
+    justify-content: flex-start;
   }
 
   .workspace {

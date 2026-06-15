@@ -15,8 +15,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     @Query("""
             SELECT c
             FROM Cliente c
-            WHERE (:buscar IS NULL
-                   OR lower(c.nombre) LIKE concat('%', :buscar, '%')
+            WHERE (lower(c.nombre) LIKE concat('%', :buscar, '%')
                    OR lower(coalesce(c.documentoIdentidad, '')) LIKE concat('%', :buscar, '%')
                    OR lower(coalesce(c.email, '')) LIKE concat('%', :buscar, '%')
                    OR lower(coalesce(c.telefono, '')) LIKE concat('%', :buscar, '%'))

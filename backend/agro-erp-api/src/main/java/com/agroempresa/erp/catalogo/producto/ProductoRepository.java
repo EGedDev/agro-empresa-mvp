@@ -16,8 +16,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     @Query("""
             SELECT p
             FROM Producto p
-            WHERE (:buscar IS NULL
-                   OR lower(p.nombre) LIKE concat('%', :buscar, '%')
+            WHERE (lower(p.nombre) LIKE concat('%', :buscar, '%')
                    OR lower(coalesce(p.descripcion, '')) LIKE concat('%', :buscar, '%'))
               AND (:activo IS NULL OR p.activo = :activo)
               AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId)
@@ -28,6 +27,22 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
             @Param("activo") Boolean activo,
             @Param("categoriaId") Long categoriaId,
             @Param("soloStockBajo") boolean soloStockBajo,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT p
+            FROM Producto p
+            WHERE p.activo = true
+              AND p.visibleWeb = true
+              AND (lower(p.nombre) LIKE concat('%', :buscar, '%')
+                   OR lower(coalesce(p.descripcion, '')) LIKE concat('%', :buscar, '%')
+                   OR lower(coalesce(p.resumenComercial, '')) LIKE concat('%', :buscar, '%'))
+              AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId)
+            """)
+    Page<Producto> buscarWeb(
+            @Param("buscar") String buscar,
+            @Param("categoriaId") Long categoriaId,
             Pageable pageable
     );
 

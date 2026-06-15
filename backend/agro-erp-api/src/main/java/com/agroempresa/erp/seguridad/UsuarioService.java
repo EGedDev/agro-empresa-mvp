@@ -56,7 +56,7 @@ public class UsuarioService {
     ) {
         return PaginaResponse.desde(
                 usuarioRepository.buscar(
-                        Paginacion.normalizarTexto(buscar),
+                        Paginacion.normalizarTextoBusqueda(buscar),
                         rol,
                         activo,
                         Paginacion.crear(pagina, tamanio, orden, CAMPOS_ORDENABLES, ORDEN_DEFAULT)

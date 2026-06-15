@@ -3,12 +3,12 @@
 Sistema web en desarrollo para digitalizar la gestión logística y comercial de Itaven SAC,
 una MYPE del sector agrícola. El objetivo es construir una plataforma que permita administrar
 catálogo, clientes, ventas e inventario, reduciendo procesos manuales y dejando una base
-preparada para operacion interna con frontend React.
+preparada para operacion interna y web comercial con Next.js + React.
 
 ## Estado
 
 Proyecto en etapa inicial de MVP. El backend concentra el nucleo transaccional del ERP y el
-frontend React ya inicia el panel interno para consumir la API.
+frontend Next.js ya integra web comercial, login general y panel interno para consumir la API.
 
 ## Stack
 
@@ -25,8 +25,11 @@ frontend React ya inicia el panel interno para consumir la API.
 - H2 para tests
 - Docker Compose
 - Maven Wrapper
+- Next.js
 - React
-- Vite
+- React Three Fiber
+- Framer Motion
+- Tailwind CSS
 - TypeScript
 
 ## Módulos Backend
@@ -54,7 +57,7 @@ frontend React ya inicia el panel interno para consumir la API.
 ```text
 backend/agro-erp-api   API REST con Spring Boot
 infra                  Servicios de infraestructura local
-frontend               Aplicacion interna React
+frontend               Web comercial y aplicacion interna Next.js
 docs                   Documentación del proyecto
 ```
 
@@ -112,19 +115,21 @@ npm install
 npm run dev
 ```
 
-La app interna corre por defecto en:
+La web comercial y el ERP interno corren por defecto en:
 
 ```text
 http://127.0.0.1:5173
 ```
 
-Configura `VITE_API_URL` si el backend usa otro host o puerto.
+Configura `NEXT_PUBLIC_API_URL` si el backend usa otro host o puerto.
 
-El panel interno del MVP permite:
+La capa web y el panel interno del MVP permiten:
 
 - Iniciar sesion o crear el primer administrador.
 - Consultar indicadores operativos y financieros.
 - Registrar categorias y productos.
+- Publicar productos en la web comercial con imagen, resumen y orden.
+- Recibir solicitudes web para que administradores y vendedores las atiendan desde Ventas.
 - Registrar clientes y proveedores.
 - Registrar ventas y compras con multiples lineas.
 - Registrar pagos de ventas y compras.

@@ -4,6 +4,7 @@ import com.agroempresa.erp.catalogo.categoria.Categoria;
 import com.agroempresa.erp.catalogo.categoria.CategoriaRepository;
 import com.agroempresa.erp.catalogo.producto.dto.ActualizarProductoRequest;
 import com.agroempresa.erp.catalogo.producto.dto.ProductoResponse;
+import com.agroempresa.erp.common.media.MediaProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +27,9 @@ class ProductoServiceTest {
     @Mock
     private CategoriaRepository categoriaRepository;
 
+    @Mock
+    private MediaProperties mediaProperties;
+
     @InjectMocks
     private ProductoService productoService;
 
@@ -40,7 +44,13 @@ class ProductoServiceTest {
                 "Granulada",
                 new BigDecimal("125.00"),
                 3,
-                1L
+                1L,
+                null,
+                null,
+                null,
+                true,
+                false,
+                0
         );
 
         when(productoRepository.findByIdParaActualizar(10L)).thenReturn(Optional.of(producto));

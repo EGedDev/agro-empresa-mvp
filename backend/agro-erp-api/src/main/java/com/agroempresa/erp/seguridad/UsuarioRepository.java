@@ -19,8 +19,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("""
             SELECT u
             FROM Usuario u
-            WHERE (:buscar IS NULL
-                   OR lower(u.username) LIKE concat('%', :buscar, '%')
+            WHERE (lower(u.username) LIKE concat('%', :buscar, '%')
                    OR lower(u.nombre) LIKE concat('%', :buscar, '%'))
               AND (:rol IS NULL OR u.rol = :rol)
               AND (:activo IS NULL OR u.activo = :activo)

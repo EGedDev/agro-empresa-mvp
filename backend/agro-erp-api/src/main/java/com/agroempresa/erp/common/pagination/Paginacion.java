@@ -45,6 +45,11 @@ public final class Paginacion {
         return valor.trim().toLowerCase();
     }
 
+    public static String normalizarTextoBusqueda(String valor) {
+        String textoNormalizado = normalizarTexto(valor);
+        return textoNormalizado == null ? "" : textoNormalizado;
+    }
+
     private static Sort construirOrden(String orden, Map<String, String> camposOrdenables, Sort ordenDefault) {
         if (orden == null || orden.isBlank()) {
             return ordenDefault;
