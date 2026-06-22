@@ -934,3 +934,52 @@ td {
     flex: 1;
   }
 }
+.whatsapp-button {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+
+  width: 65px;
+  height: 65px;
+
+  border-radius: 50%;
+
+  background: #25d366;
+  color: #fff;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 32px;
+
+  box-shadow:
+    0 10px 25px rgba(37,211,102,.35),
+    0 4px 10px rgba(0,0,0,.25);
+
+  z-index: 9999;
+
+  animation: pulse 2s infinite;
+}
+.whatsapp-button:hover {
+  transform: scale(1.1);
+  transition: all 0.3s ease;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+.admin-form-section { display: grid; gap: 4px; margin-top: 12px; border-left: 4px solid #27834d; padding: 12px 14px; background: #eef7ef; color: #17442d; }
+.admin-form-section span { color: #607268; font-size: 12px; }
+.pdf-admin-status { display: flex; align-items: center; gap: 10px; border: 1px solid #cfe1cd; border-radius: 8px; padding: 12px; background: #f4faf2; color: #245c3a; font-weight: 800; }
+.pdf-admin-status a { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; color: #1f6f43; }

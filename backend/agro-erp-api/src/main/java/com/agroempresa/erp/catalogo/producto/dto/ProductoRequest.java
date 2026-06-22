@@ -47,10 +47,30 @@ public record ProductoRequest(
         @Size(max = 700, message = "El resumen comercial no debe superar los 700 caracteres")
         String resumenComercial,
 
+        String descripcionWeb,
+        String informacionAdicional,
+        @Size(max = 300) String ingredienteActivo,
+        @Size(max = 500) String composicion,
+        @Size(max = 300) String formulacion,
+        @Size(max = 200) String numeroRegistro,
+        @Size(max = 500) String presentaciones,
+        @Size(max = 700) String cultivos,
+        String modoUso,
+        @Size(max = 500) String fichaTecnicaUrl,
+
         Boolean visibleWeb,
 
         Boolean destacado,
 
         Integer ordenWeb
 ) {
+    public ProductoRequest(
+            String nombre, String descripcion, BigDecimal precioVenta, Integer stockActual,
+            BigDecimal costoInicial, Integer stockMinimo, Long categoriaId, String imagenUrl,
+            String imagenAlt, String resumenComercial, Boolean visibleWeb, Boolean destacado, Integer ordenWeb
+    ) {
+        this(nombre, descripcion, precioVenta, stockActual, costoInicial, stockMinimo, categoriaId,
+                imagenUrl, imagenAlt, resumenComercial, null, null, null, null, null, null, null, null, null, null,
+                visibleWeb, destacado, ordenWeb);
+    }
 }

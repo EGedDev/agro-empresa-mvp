@@ -4,8 +4,16 @@ import "../src/styles.css";
 import "../src/commercial.css";
 
 export const metadata: Metadata = {
-  title: "ITAVEN ERP",
-  description: "Web comercial y ERP interno para operaciones agricolas ITAVEN."
+  title: 'ITAVENsac | Tecnología Agrícola y Fertilizantes en Perú',
+  description: 'En ITAVEN SAC ofrecemos bioestimulantes, fertilizantes y soluciones de alta tecnología conectadas a nuestro ERP para optimizar el agro peruano.',
+  keywords: ['ITAVEN', 'ITAVENsac', 'ITAVEN SAC', 'fertilizantes Perú', 'tecnología agrícola'],
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: 'https://itavensac.com', // Cambia esto si usas el .com o .com.pe definitivo
+  }
 };
 
 export const viewport: Viewport = {

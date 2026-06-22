@@ -1,0 +1,10 @@
+alter table productos add column if not exists descripcion_web text;
+alter table productos add column if not exists informacion_adicional text;
+alter table productos add column if not exists ingrediente_activo varchar(300);
+alter table productos add column if not exists composicion varchar(500);
+alter table productos add column if not exists formulacion varchar(300);
+alter table productos add column if not exists numero_registro varchar(200);
+alter table productos add column if not exists presentaciones varchar(500);
+alter table productos add column if not exists cultivos varchar(700);
+alter table productos add column if not exists modo_uso text;
+alter table productos add column if not exists ficha_tecnica_url varchar(500);

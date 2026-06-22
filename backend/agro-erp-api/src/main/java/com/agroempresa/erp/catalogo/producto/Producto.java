@@ -53,6 +53,36 @@ public class Producto {
     @Column(name = "resumen_comercial", length = 700)
     private String resumenComercial;
 
+    @Column(name = "descripcion_web", columnDefinition = "text")
+    private String descripcionWeb;
+
+    @Column(name = "informacion_adicional", columnDefinition = "text")
+    private String informacionAdicional;
+
+    @Column(name = "ingrediente_activo", length = 300)
+    private String ingredienteActivo;
+
+    @Column(name = "composicion", length = 500)
+    private String composicion;
+
+    @Column(name = "formulacion", length = 300)
+    private String formulacion;
+
+    @Column(name = "numero_registro", length = 200)
+    private String numeroRegistro;
+
+    @Column(name = "presentaciones", length = 500)
+    private String presentaciones;
+
+    @Column(name = "cultivos", length = 700)
+    private String cultivos;
+
+    @Column(name = "modo_uso", columnDefinition = "text")
+    private String modoUso;
+
+    @Column(name = "ficha_tecnica_url", length = 500)
+    private String fichaTecnicaUrl;
+
     @Column(name = "visible_web", nullable = false)
     private Boolean visibleWeb = true;
 
@@ -159,6 +189,34 @@ public class Producto {
         this.imagenUrl = textoOpcional(imagenUrl);
         this.imagenAlt = textoOpcional(this.imagenAlt) == null ? this.nombre : this.imagenAlt;
         this.visibleWeb = true;
+    }
+
+    public void actualizarFichaTecnica(String fichaTecnicaUrl) {
+        this.fichaTecnicaUrl = textoOpcional(fichaTecnicaUrl);
+    }
+
+    public void configurarFichaWeb(
+            String descripcionWeb,
+            String informacionAdicional,
+            String ingredienteActivo,
+            String composicion,
+            String formulacion,
+            String numeroRegistro,
+            String presentaciones,
+            String cultivos,
+            String modoUso,
+            String fichaTecnicaUrl
+    ) {
+        this.descripcionWeb = textoOpcional(descripcionWeb);
+        this.informacionAdicional = textoOpcional(informacionAdicional);
+        this.ingredienteActivo = textoOpcional(ingredienteActivo);
+        this.composicion = textoOpcional(composicion);
+        this.formulacion = textoOpcional(formulacion);
+        this.numeroRegistro = textoOpcional(numeroRegistro);
+        this.presentaciones = textoOpcional(presentaciones);
+        this.cultivos = textoOpcional(cultivos);
+        this.modoUso = textoOpcional(modoUso);
+        this.fichaTecnicaUrl = textoOpcional(fichaTecnicaUrl);
     }
 
     public void configurarComercial(
@@ -332,6 +390,17 @@ public class Producto {
     public String getResumenComercial() {
         return resumenComercial;
     }
+
+    public String getDescripcionWeb() { return descripcionWeb; }
+    public String getInformacionAdicional() { return informacionAdicional; }
+    public String getIngredienteActivo() { return ingredienteActivo; }
+    public String getComposicion() { return composicion; }
+    public String getFormulacion() { return formulacion; }
+    public String getNumeroRegistro() { return numeroRegistro; }
+    public String getPresentaciones() { return presentaciones; }
+    public String getCultivos() { return cultivos; }
+    public String getModoUso() { return modoUso; }
+    public String getFichaTecnicaUrl() { return fichaTecnicaUrl; }
 
     public Boolean getVisibleWeb() {
         return visibleWeb;

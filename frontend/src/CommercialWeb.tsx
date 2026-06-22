@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -27,6 +28,8 @@ import {
 } from "lucide-react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { motion } from "framer-motion";
+
+import WhatsAppButton from "./WhatsAppButton";
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 import { ApiError, PaginaResponse, apiBaseUrl, apiRequest } from "./api";
@@ -502,7 +505,117 @@ export function CommercialWeb() {
             </div>
           </div>
         </section>
+
+
+
+{/* ... (Aquí termina tu última sección de acompañamiento técnico) ... */}
+        <section className="commercial-section commercial-close">
+          <img src="/comercial/portadas/antistress-peptidos.jpeg" alt="Linea ITAVEN antistress y peptidos" />
+          <div>
+            <span className="section-kicker">Acompanamiento tecnico</span>
+            <h2>Productos, asesoria y cotizacion en un solo contacto.</h2>
+            <p>
+              Un asesor revisa tu cultivo, necesidad y zona para recomendarte la linea adecuada antes de comprar.
+            </p>
+            <div className="close-actions">
+              <a className="commercial-cta dark" href="https://wa.me/51928978841" target="_blank" rel="noreferrer">
+                Escribir por WhatsApp
+                <MessageCircle size={18} />
+              </a>
+              <a className="commercial-cta secondary" href="#catalogo">
+                Ver catalogo
+                <ArrowRight size={18} />
+              </a>
+            </div>
+          </div>
+        </section>
+
+
+
+
+
+
+
+
+{/* ¡AQUÍ SE QUEDA EL FOOTER, JUSTO ANTES DE CERRAR EL MAIN! */}
+        <footer className="commercial-footer">
+          <div className="footer-container">
+            
+            {/* Columna 1: Soluciones */}
+            <div className="footer-column">
+              <h3>Soluciones</h3>
+              <ul>
+                <li><a href="#fertilizantes">Fertilizantes</a></li>
+                <li><a href="#bioestimulantes">Bioestimulantes</a></li>
+                <li><a href="#proteccion">Protección de Cultivos</a></li>
+                <li><a href="#asesoria">Asesoría Técnica</a></li>
+              </ul>
+            </div>
+
+            {/* Columna 2: Contáctenos */}
+            <div className="footer-column">
+              <h3>Contáctenos</h3>
+              <div className="contact-info">
+                <p className="label">DIRECCIÓN</p>
+                <p>Huaura, Región Lima - Perú</p>
+                
+                <p className="label">TELÉFONO</p>
+                <p>+51 983 979 147</p>
+                
+                <p className="label">EMAIL</p>
+                <p>contacto@itavensac.com</p>
+              </div>
+            </div>
+
+            {/* Columna 3: Sobre la empresa y Redes */}
+            <div className="footer-column">
+              <h3>ITAVEN SAC</h3>
+              <p className="footer-description">
+                Tecnología agrícola conectada al ERP. Innovación, sostenibilidad y compromiso con el agro peruano.
+              </p>
+              <div className="footer-socials">
+                <a href="#" className="social-icon">fb</a>
+                <a href="#" className="social-icon">in</a>
+                <a href="#" className="social-icon">yt</a>
+                <a href="#" className="social-icon">ig</a>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Barra inferior de créditos */}
+          <div className="footer-bottom">
+            <div className="footer-bottom-content">
+              <div className="footer-copy">
+                <span>Copyright © 2026 - ITAVEN SAC</span>
+                <a href="#privacidad">Políticas de Privacidad</a>
+              </div>
+              <div className="footer-credits">
+                Desarrollado por <span className="dev-name">Ing.Eli Garro </span>
+              </div>
+            </div>
+          </div>
+        </footer>
+      
+
       </main>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
 
       <aside className={cartOpen ? "cart-panel open" : "cart-panel"} aria-label="Carrito de compras">
         <div className="cart-panel-head">
@@ -556,7 +669,7 @@ export function CommercialWeb() {
             <span>Total estimado</span>
             <strong>{formatPrice(cartTotal)}</strong>
           </div>
-          <a className={cart.length === 0 ? "disabled" : ""} href={`https://wa.me/51983979147?text=${quoteMessage}`} target="_blank" rel="noreferrer">
+          <a className={cart.length === 0 ? "disabled" : ""} href={`https://wa.me/51983971947?text=${quoteMessage}`} target="_blank" rel="noreferrer">
             <MessageCircle size={18} />
             Cotizar por WhatsApp
           </a>
@@ -566,6 +679,8 @@ export function CommercialWeb() {
         </div>
       </aside>
       {cartOpen && <button className="cart-scrim" aria-label="Cerrar carrito" onClick={() => setCartOpen(false)} type="button" />}
+<WhatsAppButton />
+
     </div>
   );
 }
@@ -806,14 +921,16 @@ function ProductCard({
       transition={{ type: "spring", stiffness: 260, damping: 24 }}
     >
       <div className="product-image-frame">
-        <img src={productVisual(product)} alt={product.nombre} loading="lazy" />
+        <a href={`/producto/${product.id}`} aria-label={`Ver información de ${product.nombre}`}>
+          <img src={productVisual(product)} alt={product.nombre} loading="lazy" />
+        </a>
       </div>
       <div className="product-content">
         <div className="product-meta">
           <span>{product.categoria}</span>
           {product.destacado && <strong>Destacado</strong>}
         </div>
-        <h3>{product.nombre}</h3>
+        <h3><a className="product-detail-link" href={`/producto/${product.id}`}>{product.nombre}</a></h3>
         <div className="product-price">
           <span>Precio</span>
           <strong>{formatPrice(product.precioVenta)}</strong>
@@ -828,6 +945,7 @@ function ProductCard({
           ))}
         </ul>
         <div className="cart-actions">
+          <a className="product-more-link" href={`/producto/${product.id}`}>Ver información completa <ChevronRight size={15} /></a>
           {quantity > 0 && (
             <button aria-label={`Quitar ${product.nombre}`} className="quantity-button" onClick={onDecrease} type="button">
               <Minus size={15} />
@@ -848,6 +966,11 @@ function ProductCard({
             )}
           </button>
         </div>
+
+
+
+
+
       </div>
     </motion.article>
   );

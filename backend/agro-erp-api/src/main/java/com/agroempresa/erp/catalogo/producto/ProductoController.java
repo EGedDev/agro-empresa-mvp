@@ -81,6 +81,14 @@ public class ProductoController {
         return productoService.actualizarImagen(id, imagen);
     }
 
+    @PostMapping(path = "/{id}/ficha-tecnica", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ProductoResponse actualizarFichaTecnica(
+            @PathVariable @Positive(message = "El id debe ser mayor a cero") Long id,
+            @RequestPart("fichaTecnica") MultipartFile fichaTecnica
+    ) {
+        return productoService.actualizarFichaTecnica(id, fichaTecnica);
+    }
+
     @PatchMapping("/{id}/desactivar")
     public ProductoResponse desactivar(@PathVariable @Positive(message = "El id debe ser mayor a cero") Long id) {
         return productoService.desactivar(id);

@@ -150,6 +150,11 @@ public class ProductoService {
         );
 
         Producto productoGuardado = productoRepository.save(producto);
+        productoGuardado.configurarFichaWeb(
+                request.descripcionWeb(), request.informacionAdicional(), request.ingredienteActivo(),
+                request.composicion(), request.formulacion(), request.numeroRegistro(), request.presentaciones(),
+                request.cultivos(), request.modoUso(), request.fichaTecnicaUrl()
+        );
 
         return ProductoResponse.desdeEntidad(productoGuardado);
     }
@@ -177,6 +182,11 @@ public class ProductoService {
                 request.destacado() == null ? producto.getDestacado() : request.destacado(),
                 request.ordenWeb() == null ? producto.getOrdenWeb() : request.ordenWeb()
         );
+        producto.configurarFichaWeb(
+                request.descripcionWeb(), request.informacionAdicional(), request.ingredienteActivo(),
+                request.composicion(), request.formulacion(), request.numeroRegistro(), request.presentaciones(),
+                request.cultivos(), request.modoUso(), conservarSiNulo(request.fichaTecnicaUrl(), producto.getFichaTecnicaUrl())
+        );
 
         return ProductoResponse.desdeEntidad(producto);
     }
@@ -186,6 +196,20 @@ public class ProductoService {
         Producto producto = buscarProductoParaActualizar(id);
         String imagenUrl = guardarImagen(producto.getId(), archivo);
         producto.actualizarImagen(imagenUrl);
+        return ProductoResponse.desdeEntidad(producto);
+    }
+
+    @Transactional
+    public ProductoResponse actualizarFichaTecnica(Long id, MultipartFile archivo) {
+        Producto producto = buscarProductoParaActualizar(id);
+        producto.actualizarFichaTecnica(guardarPdf(producto.getId(), archivo));
+        return ProductoResponse.desdeEntidad(producto);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductoResponse obtenerWebPorId(Long id) {
+        Producto producto = productoRepository.findByIdAndActivoTrueAndVisibleWebTrue(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro el producto publicado"));
         return ProductoResponse.desdeEntidad(producto);
     }
 
@@ -284,6 +308,31 @@ public class ProductoService {
         }
 
         throw new BusinessException("Solo se permiten imagenes JPG, PNG o WEBP");
+    }
+
+    private String guardarPdf(Long productoId, MultipartFile archivo) {
+        if (archivo == null || archivo.isEmpty()) {
+            throw new BusinessException("Debes enviar una ficha tecnica en PDF");
+        }
+        if (archivo.getSize() > 15 * 1024 * 1024) {
+            throw new BusinessException("El PDF no debe superar 15 MB");
+        }
+        String nombreOriginal = archivo.getOriginalFilename();
+        boolean extensionPdf = nombreOriginal != null && nombreOriginal.toLowerCase(Locale.ROOT).endsWith(".pdf");
+        if (!extensionPdf && !"application/pdf".equalsIgnoreCase(archivo.getContentType())) {
+            throw new BusinessException("Solo se permiten archivos PDF");
+        }
+
+        String nombreArchivo = "ficha-%d-%s.pdf".formatted(productoId, UUID.randomUUID());
+        Path directorio = mediaProperties.uploadDir().resolve("fichas-tecnicas").normalize().toAbsolutePath();
+        Path destino = directorio.resolve(nombreArchivo).normalize();
+        try {
+            Files.createDirectories(directorio);
+            Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            throw new BusinessException("No se pudo guardar la ficha tecnica");
+        }
+        return "/media/fichas-tecnicas/" + nombreArchivo;
     }
 
     private String conservarSiNulo(String valorNuevo, String valorActual) {

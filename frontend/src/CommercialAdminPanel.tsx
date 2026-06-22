@@ -1,4 +1,4 @@
-import { ExternalLink, ImagePlus, Loader2, RefreshCw, Save, Store } from "lucide-react";
+import { ExternalLink, FileText, ImagePlus, Loader2, RefreshCw, Save, Store } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiBaseUrl, apiRequest, getPage, uploadFile } from "./api";
 
@@ -12,6 +12,16 @@ type ProductoAdmin = {
   imagenUrl?: string | null;
   imagenAlt?: string | null;
   resumenComercial?: string | null;
+  descripcionWeb?: string | null;
+  informacionAdicional?: string | null;
+  ingredienteActivo?: string | null;
+  composicion?: string | null;
+  formulacion?: string | null;
+  numeroRegistro?: string | null;
+  presentaciones?: string | null;
+  cultivos?: string | null;
+  modoUso?: string | null;
+  fichaTecnicaUrl?: string | null;
   destacado?: boolean | null;
   visibleWeb?: boolean | null;
   ordenWeb?: number | null;
@@ -31,6 +41,15 @@ type EditorForm = {
   stockMinimo: string;
   descripcion: string;
   resumenComercial: string;
+  descripcionWeb: string;
+  informacionAdicional: string;
+  ingredienteActivo: string;
+  composicion: string;
+  formulacion: string;
+  numeroRegistro: string;
+  presentaciones: string;
+  cultivos: string;
+  modoUso: string;
   imagenAlt: string;
   visibleWeb: boolean;
   destacado: boolean;
@@ -44,6 +63,15 @@ const emptyForm: EditorForm = {
   stockMinimo: "0",
   descripcion: "",
   resumenComercial: "",
+  descripcionWeb: "",
+  informacionAdicional: "",
+  ingredienteActivo: "",
+  composicion: "",
+  formulacion: "",
+  numeroRegistro: "",
+  presentaciones: "",
+  cultivos: "",
+  modoUso: "",
   imagenAlt: "",
   visibleWeb: true,
   destacado: false,
@@ -56,6 +84,7 @@ export function CommercialAdminPanel({ token }: { token: string }) {
   const [selectedId, setSelectedId] = useState("");
   const [form, setForm] = useState<EditorForm>(emptyForm);
   const [file, setFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -108,12 +137,22 @@ export function CommercialAdminPanel({ token }: { token: string }) {
       stockMinimo: String(selectedProduct.stockMinimo ?? 0),
       descripcion: selectedProduct.descripcion ?? "",
       resumenComercial: selectedProduct.resumenComercial ?? "",
+      descripcionWeb: selectedProduct.descripcionWeb ?? "",
+      informacionAdicional: selectedProduct.informacionAdicional ?? "",
+      ingredienteActivo: selectedProduct.ingredienteActivo ?? "",
+      composicion: selectedProduct.composicion ?? "",
+      formulacion: selectedProduct.formulacion ?? "",
+      numeroRegistro: selectedProduct.numeroRegistro ?? "",
+      presentaciones: selectedProduct.presentaciones ?? "",
+      cultivos: selectedProduct.cultivos ?? "",
+      modoUso: selectedProduct.modoUso ?? "",
       imagenAlt: selectedProduct.imagenAlt ?? selectedProduct.nombre,
       visibleWeb: selectedProduct.visibleWeb ?? true,
       destacado: selectedProduct.destacado ?? false,
       ordenWeb: String(selectedProduct.ordenWeb ?? 0)
     });
     setFile(null);
+    setPdfFile(null);
   }, [selectedProduct]);
 
   async function submit(event: FormEvent) {
@@ -140,6 +179,16 @@ export function CommercialAdminPanel({ token }: { token: string }) {
           imagenUrl: selectedProduct.imagenUrl ?? null,
           imagenAlt: emptyToNull(form.imagenAlt),
           resumenComercial: emptyToNull(form.resumenComercial),
+          descripcionWeb: emptyToNull(form.descripcionWeb),
+          informacionAdicional: emptyToNull(form.informacionAdicional),
+          ingredienteActivo: emptyToNull(form.ingredienteActivo),
+          composicion: emptyToNull(form.composicion),
+          formulacion: emptyToNull(form.formulacion),
+          numeroRegistro: emptyToNull(form.numeroRegistro),
+          presentaciones: emptyToNull(form.presentaciones),
+          cultivos: emptyToNull(form.cultivos),
+          modoUso: emptyToNull(form.modoUso),
+          fichaTecnicaUrl: selectedProduct.fichaTecnicaUrl ?? null,
           visibleWeb: form.visibleWeb,
           destacado: form.destacado,
           ordenWeb: integerInput(form.ordenWeb)
@@ -152,8 +201,14 @@ export function CommercialAdminPanel({ token }: { token: string }) {
           file
         });
       }
+      if (pdfFile) {
+        await uploadFile<ProductoAdmin>(`/api/v1/productos/${updated.id}/ficha-tecnica`, {
+          token, file: pdfFile, fieldName: "fichaTecnica"
+        });
+      }
 
       setFile(null);
+      setPdfFile(null);
       setMessage("Producto actualizado en la vitrina");
       await load();
     } catch (caught) {
@@ -244,6 +299,19 @@ export function CommercialAdminPanel({ token }: { token: string }) {
               Resumen comercial para la tienda
               <textarea value={form.resumenComercial} onChange={(event) => setForm({ ...form, resumenComercial: event.target.value })} />
             </label>
+            <div className="full-span admin-form-section"><strong>Ficha pública del producto</strong><span>Todo este contenido aparece en la página que visita el cliente.</span></div>
+            <label className="full-span">
+              Descripción completa
+              <textarea rows={5} value={form.descripcionWeb} onChange={(event) => setForm({ ...form, descripcionWeb: event.target.value })} />
+            </label>
+            <label>Ingrediente activo<input value={form.ingredienteActivo} onChange={(event) => setForm({ ...form, ingredienteActivo: event.target.value })} /></label>
+            <label>Composición / concentración<input value={form.composicion} onChange={(event) => setForm({ ...form, composicion: event.target.value })} /></label>
+            <label>Formulación<input value={form.formulacion} onChange={(event) => setForm({ ...form, formulacion: event.target.value })} /></label>
+            <label>Número de registro<input value={form.numeroRegistro} onChange={(event) => setForm({ ...form, numeroRegistro: event.target.value })} /></label>
+            <label className="full-span">Presentaciones comerciales<input value={form.presentaciones} onChange={(event) => setForm({ ...form, presentaciones: event.target.value })} placeholder="Ej. 250 ml, 1 L y 20 L" /></label>
+            <label className="full-span">Cultivos recomendados<input value={form.cultivos} onChange={(event) => setForm({ ...form, cultivos: event.target.value })} placeholder="Ej. Palto, arándano, vid y cítricos" /></label>
+            <label className="full-span">Modo de uso<textarea rows={4} value={form.modoUso} onChange={(event) => setForm({ ...form, modoUso: event.target.value })} /></label>
+            <label className="full-span">Información adicional<textarea rows={5} value={form.informacionAdicional} onChange={(event) => setForm({ ...form, informacionAdicional: event.target.value })} /></label>
             <label>
               Orden web
               <input inputMode="numeric" value={form.ordenWeb} onChange={(event) => setForm({ ...form, ordenWeb: event.target.value })} />
@@ -264,6 +332,11 @@ export function CommercialAdminPanel({ token }: { token: string }) {
               Imagen JPG, PNG o WEBP
               <input accept="image/jpeg,image/png,image/webp" type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
             </label>
+            <label className="full-span">
+              Ficha técnica en PDF (máximo 15 MB)
+              <input accept="application/pdf,.pdf" type="file" onChange={(event) => setPdfFile(event.target.files?.[0] ?? null)} />
+            </label>
+            {(pdfFile || selectedProduct?.fichaTecnicaUrl) && <div className="pdf-admin-status full-span"><FileText size={20} /><span>{pdfFile ? `Nuevo PDF: ${pdfFile.name}` : "Ficha técnica publicada"}</span>{!pdfFile && selectedProduct?.fichaTecnicaUrl && <a href={mediaUrl(selectedProduct.fichaTecnicaUrl)} target="_blank" rel="noreferrer">Ver PDF <ExternalLink size={14} /></a>}</div>}
             <div className="web-image-preview full-span">
               {previewUrl || selectedProduct?.imagenUrl ? (
                 <img src={previewUrl ?? mediaUrl(selectedProduct?.imagenUrl)} alt={form.imagenAlt || selectedProduct?.nombre || "Producto"} />
@@ -280,7 +353,7 @@ export function CommercialAdminPanel({ token }: { token: string }) {
               type="submit"
             >
               {saving ? <Loader2 className="spin" size={17} /> : <Save size={17} />}
-              Guardar cambios de vitrina
+              Guardar toda la información
             </button>
           </form>
         </section>
