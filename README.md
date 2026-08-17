@@ -1,4 +1,4 @@
-https://itavensac.vercel.app/
+
 
 
 # Agro Empresa MVP
@@ -7,6 +7,9 @@ Sistema web en desarrollo para digitalizar la gestión logística y comercial de
 una MYPE del sector agrícola. El objetivo es construir una plataforma que permita administrar
 catálogo, clientes, ventas e inventario, reduciendo procesos manuales y dejando una base
 preparada para operacion interna y web comercial con Next.js + React.
+
+https://itavensac.vercel.app/
+
 
 ## Estado
 
